@@ -9,7 +9,7 @@ The Uniandes Labs Orchestration System (ULOS) is a system that automates the exe
 You can download the project with the following command on whichever directory you want the repository to be placed at:
 
 ```zsh
-git clone <URL>
+git clone https://github.com/est-gonzalezr/uniandes-labs-orchestration-system
 ```
 
 # Components
