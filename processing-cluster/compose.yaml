@@ -1,0 +1,80 @@
+networks:
+  processing-cluster:
+    driver: bridge
+    name: processing-cluster
+
+configs:
+  plugins:
+    content: "[rabbitmq_management, rabbitmq_federation, rabbitmq_federation_management, rabbitmq_shovel, rabbitmq_shovel_management]."
+
+services:
+  rabbitmq-local:
+    build:
+      context: ./rabbitmq-local
+      dockerfile: Dockerfile
+    container_name: rabbitmq-local
+    image: rabbitmq-local
+    ports:
+      - 15674:15672
+      - 5674:5672
+    networks:
+      - processing-cluster
+    configs:
+      - source: plugins
+        target: /etc/rabbitmq/enabled_plugins
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    env_file:
+      - .env
+
+  local-messaging:
+    build:
+      context: ./processing-cluster-messaging
+      dockerfile: Dockerfile
+    container_name: local-messaging
+    image: processing-cluster-messaging
+    networks:
+      - processing-cluster
+    depends_on:
+      rabbitmq-local:
+        condition: service_healthy
+    env_file:
+      - .env
+
+  local-ftp:
+    build:
+      context: ./processing-cluster-ftp
+      dockerfile: Dockerfile
+    container_name: local-ftp
+    image: processing-cluster-ftp
+    volumes:
+      - shared-data:/temp_files
+    networks:
+      - processing-cluster
+    depends_on:
+      rabbitmq-local:
+        condition: service_healthy
+    env_file:
+      - .env
+
+  local-processor:
+    build:
+      context: ./processing-cluster-processor
+      dockerfile: Dockerfile
+    container_name: local-processor
+    image: processing-cluster-processor
+    volumes:
+      - shared-data:/temp_files
+    networks:
+      - processing-cluster
+    depends_on:
+      rabbitmq-local:
+        condition: service_healthy
+    env_file:
+      - .env
+
+volumes:
+  shared-data:
