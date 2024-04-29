@@ -187,4 +187,4 @@ rabbitmqctl set_parameter federation-upstream global_processing "{\"uri\":\"amqp
 rabbitmqctl set_policy --apply-to queues federated-user-results-queue "^federated_user_results_queue" "{\"federation-upstream\":\"global-processing\"}"
 ```
 
-This will allow for the federation to take place.
+This will allow for the federation to take place and the service before the GPE to receive messages from the GPE.
