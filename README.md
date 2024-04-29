@@ -167,7 +167,7 @@ rabbitmqctl set_parameter federation-upstream-set processing_clusters "[{\"upstr
 # If later I want to add more upstreams I would have to do the following:
 
 rabbitmqctl set_parameter federation-upstream processing-cluster-2 "{\"uri\":\"amqp://guest:guest@192.168.2.10:5672\"}"
-rabbitmqctl set_parameter federation-upstream-set processing_clusters '[{"upstream": "processing-cluster-1"}, {"upstream": "processing-cluster-2"}]'
+rabbitmqctl set_parameter federation-upstream-set processing_clusters "[{\"upstream\": \"processing-cluster-1\"}, {\"upstream\": \"processing-cluster-2\"}]"
 ```
 
 If you know how many PCs you would have from the start (you can always add more later anyways) you could define them all at once.
