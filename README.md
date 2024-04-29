@@ -155,7 +155,6 @@ At this point most of the configuration has already been done but some things ar
 
 ```zsh
 rabbitmqctl set_parameter federation-upstream <cluster-name> "{\"uri\":\"amqp://<username>:<password>@<host>:<port>\"}"
-
 rabbitmqctl set_parameter federation-upstream-set processing_clusters "[{\"upstream\": \"<cluster-name>\"}]"
 ```
 
@@ -163,13 +162,11 @@ These commands are responsible for defining a new upstream and adding it to the 
 
 ```zsh
 rabbitmqctl set_parameter federation-upstream processing-cluster-1 "{\"uri\":\"amqp://guest:guest@host.docker.internal:5673\"}"
-
 rabbitmqctl set_parameter federation-upstream-set processing_clusters "[{\"upstream\": \"processing-cluster-1\"}]"
 
 # If later I want to add more upstreams I would have to do the following:
 
 rabbitmqctl set_parameter federation-upstream processing-cluster-2 "{\"uri\":\"amqp://guest:guest@192.168.2.10:5672\"}"
-
 rabbitmqctl set_parameter federation-upstream-set processing_clusters '[{"upstream": "processing-cluster-1"}, {"upstream": "processing-cluster-2"}]'
 ```
 
@@ -177,9 +174,7 @@ If you know how many PCs you would have from the start (you can always add more 
 
 ```zsh
 rabbitmqctl set_parameter federation-upstream processing-cluster-1 "{\"uri\":\"amqp://guest:guest@host.docker.internal:5673\"}"
-
 rabbitmqctl set_parameter federation-upstream processing-cluster-2 "{\"uri\":\"amqp://guest:guest@192.168.2.10:5672\"}"
-
 rabbitmqctl set_parameter federation-upstream-set processing_clusters '[{"upstream": "processing-cluster-1"}, {"upstream": "processing-cluster-2"}]'
 ```
 
@@ -189,7 +184,6 @@ Lastly, on whatever service is implemented before the GPE, it should also set up
 
 ```zsh
 rabbitmqctl set_parameter federation-upstream global_processing "{\"uri\":\"amqp://guest:guest@<gpe_host>:5672\"}"
-
 rabbitmqctl set_policy --apply-to queues federated-user-results-queue "^federated_user_results_queue" "{\"federation-upstream\":\"global-processing\"}"
 ```
 
