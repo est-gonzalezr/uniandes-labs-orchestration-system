@@ -24,6 +24,7 @@ private val GlobalProcessingExchange = ExchangeName(
   "global_processing_exchange"
 )
 private val GlobalProcessingExchangeType = ExchangeType.Topic
+private val UserTasksQueue = QueueName("federated_user_tasks_queue")
 private val GlobalProcessingQueue = QueueName(
   "federated_global_processing_queue"
 )
@@ -31,10 +32,9 @@ private val GlobalProcessingRoutingKey = RoutingKey("global.task.processing")
 private val GlobalResultsQueue = QueueName(
   "federated_global_results_queue"
 )
-private val GlobalResultsRoutingKey = RoutingKey("global.task.results")
 private val UserResultsQueue = QueueName("federated_user_results_queue")
 private val UserResultsRoutingKey = RoutingKey("user.task.results")
-private val UserTasksQueue = QueueName("federated_user_tasks_queue")
+
 
 /** The GlobalMessagingManager object is responsible for configuring the local
   * and global clusters.
@@ -84,14 +84,6 @@ object GlobalMessagingManager:
           channel,
           GlobalResultsQueue
         )
-
-        _globalResultQueueBindedToExchange <- MessagingUtil
-          .bindedQueueWithExchange(
-            channel,
-            GlobalResultsQueue,
-            GlobalProcessingExchange,
-            GlobalResultsRoutingKey
-          )
 
         _userResultsQueueDeclared <- MessagingUtil.channelWithQueue(
           channel,

@@ -1,9 +1,9 @@
-/** The ftp package contains the FtpDownloader class and its companion object.
-  * The FtpDownloader class is responsible for downloading files from the ftp
-  * server. The companion object is responsible for reading the configurations
-  * from the application.conf file and creating the FtpDownloader objects. If
-  * the service is running in a docker environment, the configurations are read
-  * from the environment variables.
+/** The ftp package contains the FtpWorker class and its companion object. The
+  * FtpWorker class is responsible for uploading and downloading files to and
+  * from the ftp server. The companion object is responsible for reading the
+  * configurations from the application.conf file and creating the FtpWorker
+  * objects. If the service is running in a docker environment, the
+  * configurations are read from the environment variables.
   *
   * @author
   *   Esteban Gonzalez Ruales
@@ -29,8 +29,10 @@ import org.apache.commons.net.ftp.FTPConnectionClosedException
 import java.io.IOException
 import java.net.SocketException
 import java.net.UnknownHostException
+import java.io.InputStream
+import java.io.ByteArrayInputStream
 
-/** The FtpDownloader class is responsible for downloading files from the ftp
+/** The FtpWorker class is responsible for downloading files from the ftp
   * server.
   *
   * @param host
@@ -42,7 +44,7 @@ import java.net.UnknownHostException
   * @param password
   *   the password
   */
-case class FtpDownloader(
+case class FtpWorker(
     host: String,
     port: Int,
     username: String,
@@ -53,7 +55,7 @@ case class FtpDownloader(
 /** Companion object of the Client class. Responsible for reading configurations
   * of the server and creating clients.
   */
-object FtpDownloader:
+object FtpWorker:
   private val config = ConfigFactory.load()
 
   /** Creates a new client with the configurations from the application.conf.
@@ -64,7 +66,7 @@ object FtpDownloader:
     * @return
     *   either a string with the error message or the client
     */
-  def apply(dockerEnv: Boolean = true): Either[String, FtpDownloader] =
+  def apply(dockerEnv: Boolean = true): Either[String, FtpWorker] =
     val client =
       dockerEnv match
         case true =>
@@ -73,14 +75,14 @@ object FtpDownloader:
             port <- envFtpPort
             username <- envFtpUsername
             password <- envFtpPassword
-          yield FtpDownloader(host, port, username, password)
+          yield FtpWorker(host, port, username, password)
         case false =>
           for
             host <- configFtpHost
             port <- configFtpPort
             username <- configFtpUsername
             password <- configFtpPassword
-          yield FtpDownloader(host, port, username, password)
+          yield FtpWorker(host, port, username, password)
 
     try
       client match
@@ -105,33 +107,57 @@ object FtpDownloader:
     *   the client to use to connect to the server
     * @param path
     *   the path of the file to retrieve
+    *
     * @return
     *   Either a string with the error message or the file as an array of bytes
     */
   def fileFromPath(
-      downloader: FtpDownloader,
+      ftpWorker: FtpWorker,
       path: String
   ): Either[String, Array[Byte]] =
-    val file = downloader.client.retrieveFileStream(path)
+    val file = ftpWorker.client.retrieveFileStream(path)
 
-    val server_response =
-      if file == null then Left(s"File not found: $path")
-      else
-        val fileData = Right(file.readAllBytes())
-        file.close()
-        downloader.client.completePendingCommand()
-        fileData
-    server_response
+    if file == null then Left(s"File not found: $path")
+    else
+      val fileData = Right(file.readAllBytes())
+      file.close()
+      ftpWorker.client.completePendingCommand()
+      fileData
 
-  /** Sends a NoOp command to the server to keep the connection alive.
-    * @param downloader
+  /** Stores a file in the server.
+    *
+    * @param ftpWorker
     *   the client to use to connect to the server
+    * @param path
+    *   the path of the file to store
+    * @param file
+    *   the file as an array of bytes
+    *
     * @return
     *   Either a string with the error message or a boolean
     */
-  def sendNoOp(downloader: FtpDownloader): Either[String, Boolean] =
+  def fileToPath(
+      ftpWorker: FtpWorker,
+      path: String,
+      file: Array[Byte]
+  ): Either[String, true] =
+    // turn array of bytes into input stream
+    val inputStream: InputStream = new ByteArrayInputStream(file)
+
+    ftpWorker.client.storeFile(path, inputStream) match
+      case false => Left(s"Couldn't store file: $path")
+      case true  => Right(true)
+
+  /** Sends a NoOp command to the server to keep the connection alive.
+    * @param ftpWorker
+    *   the client to use to connect to the server
+    *
+    * @return
+    *   Either a string with the error message or a boolean
+    */
+  def sendNoOp(ftpWorker: FtpWorker): Either[String, Boolean] =
     try
-      val result = downloader.client.sendNoOp()
+      val result = ftpWorker.client.sendNoOp()
       Right(result)
     catch
       case e: IOException =>

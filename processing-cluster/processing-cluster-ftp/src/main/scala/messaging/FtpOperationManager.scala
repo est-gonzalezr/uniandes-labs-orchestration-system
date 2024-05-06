@@ -1,4 +1,4 @@
-/** The FileDownloadingManager object is responsible for configuring the ftp
+/** The FtpOperationManager object is responsible for configuring the ftp
   * portion of the cluster messaging.
   *
   * @author
@@ -13,7 +13,7 @@ import com.rabbitmq.client.Consumer
 import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.DeliverCallback
 import com.rabbitmq.client.Envelope
-import ftp.FtpDownloader
+import ftp.FtpWorker
 import types.ExchangeType
 import types.OpaqueTypes.*
 
@@ -24,13 +24,14 @@ private val Success = "Success"
 private val LocalProcessingExchange = ExchangeName("local_processing_exchange")
 private val LocalProcessingExchangeType = ExchangeType.Topic
 private val TaskDownloadingQueue = QueueName("local_task_downloading_queue")
+private val TaskUploadingQueue = QueueName("local_task_uploading_queue")
 private val TaskProcessingRoutingKey = RoutingKey("local.task.processing")
 private val GlobalResultsRoutingKey = RoutingKey("global.task.results")
 
-/** The FileDownloadingManager object is responsible for configuring the ftp
+/** The FtpOperationManager object is responsible for configuring the ftp
   * portion of the cluster messaging.
   */
-object FileDownloadingManager:
+object FtpOperationManager:
   /** The configureFileDownloaderMessaging function configures the local ftp
     * messaging.
     *
@@ -55,6 +56,11 @@ object FileDownloadingManager:
         _taskDownloadingQueueDeclared <- MessagingUtil.channelWithQueue(
           channel,
           TaskDownloadingQueue
+        )
+
+        _taskUploadingQueueDeclared <- MessagingUtil.channelWithQueue(
+          channel,
+          TaskUploadingQueue
         )
 
         _channelQosDefined <- MessagingUtil.channelWithQos(
@@ -126,7 +132,7 @@ object FileDownloadingManager:
       dockerEnv: Boolean = true
   ): Either[String, DefaultConsumer] =
     val consumer =
-      for downloader <- FtpDownloader.apply(dockerEnv)
+      for downloader <- FtpWorker.apply(dockerEnv)
       yield DownloadingConsumer(
         channel,
         TaskProcessingRoutingKey,
@@ -161,6 +167,61 @@ object FileDownloadingManager:
     MessagingUtil.consumeMessages(
       channel,
       TaskDownloadingQueue,
+      autoAck,
+      consumer
+    )
+
+  /** The createUploadingConsumer function creates a consumer for the task
+    * uploading queue.
+    *
+    * @param channel
+    *   the channel to use for the consumer creation
+    * @param dockerEnv
+    *   a boolean indicating if the service is running in a docker environment
+    *
+    * @return
+    *   either a string with the error message or the consumer
+    */
+  def createUploadingConsumer(
+      channel: Channel,
+      dockerEnv: Boolean = true
+  ): Either[String, DefaultConsumer] =
+    val consumer =
+      for uploader <- FtpWorker.apply(dockerEnv)
+      yield UploadingConsumer(
+        channel,
+        GlobalResultsRoutingKey,
+        GlobalResultsRoutingKey,
+        publishMessage,
+        uploader
+      )
+
+    consumer match
+      case Left(error) => Left(error)
+      case Right(consumer) =>
+        consumer.startScheduledNoOp()
+        Right(consumer)
+
+  /** The consumeTaskUploadingQueue consumes the task uploading queue.
+    *
+    * @param channel
+    *   the channel to use for the queue consumption
+    * @param autoAck
+    *   a boolean indicating whether the queue should auto-acknowledge messages
+    * @param consumer
+    *   the consumer to use for the queue consumption
+    *
+    * @return
+    *   a string indicating the result of the queue consumption
+    */
+  def consumeTaskUploadingQueue(
+      channel: Channel,
+      autoAck: Boolean,
+      consumer: Consumer
+  ): Either[String, String] =
+    MessagingUtil.consumeMessages(
+      channel,
+      TaskUploadingQueue,
       autoAck,
       consumer
     )

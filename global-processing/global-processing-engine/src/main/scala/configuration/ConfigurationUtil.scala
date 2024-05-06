@@ -24,7 +24,10 @@ private val EnvFtpPassword = "FTP_PASSWORD"
 
 private val EnvTaskTypeStr = "TASK_TYPE"
 
-private val EnvFtpConsumerQuantityStr = "FTP_CONSUMER_QUANTITY"
+private val EnvFtpDownloadingConsumerQuantityStr =
+  "FTP_DOWNLOADING_CONSUMER_QUANTITY"
+private val EnvFtpUploadingConsumerQuantityStr =
+  "FTP_UPLOADING_CONSUMER_QUANTITY"
 private val EnvProcessingConsumerQuantityStr = "PROCESSING_CONSUMER_QUANTITY"
 
 private val ConfigLocalRabbitMqHostStr = "local_rabbitmq_host"
@@ -39,7 +42,8 @@ private val ConfigFtpPassword = "ftp_password"
 
 private val ConfigTaskTypeStr = "task_type"
 
-private val ConfigFtpConsumerQuantityStr = "ftp_consumer_quantity"
+private val ConfigFtpDownloadingConsumerQuantityStr = "ftp_consumer_quantity"
+private val ConfigFtpUploadingConsumerQuantityStr = "ftp_consumer_quantity"
 private val ConfigProcessingConsumerQuantityStr = "processing_consumer_quantity"
 
 /** The ConfigurationUtil object contains the functions to read the local
@@ -149,19 +153,35 @@ object ConfigurationUtil:
       .get(EnvTaskTypeStr)
       .toRight(s"Missing: $EnvTaskTypeStr not found in env")
 
-  /** The envFtpConsumerQuantity function reads the FTP consumer quantity from
-    * the environment variables.
+  /** The envFtpDownloadingConsumerQuantity function reads the FTP consumer
+    * quantity from the environment variables.
     *
     * @return
     *   either the FTP consumer quantity or an error message
     */
-  def envFtpConsumerQuantity: Either[String, Int] =
-    sys.env.get(EnvFtpConsumerQuantityStr) match
+  def envFtpDownloadingConsumerQuantity: Either[String, Int] =
+    sys.env.get(EnvFtpDownloadingConsumerQuantityStr) match
       case Some(quantity) =>
         quantity.toIntOption.toRight(
-          s"WrongType: $EnvFtpConsumerQuantityStr has wrong type"
+          s"WrongType: $EnvFtpDownloadingConsumerQuantityStr has wrong type"
         )
-      case None => Left(s"Missing: $EnvFtpConsumerQuantityStr not found in env")
+      case None =>
+        Left(s"Missing: $EnvFtpDownloadingConsumerQuantityStr not found in env")
+
+  /** The envFtpUploadingConsumerQuantity function reads the FTP uploading
+    * consumer quantity from the environment variables.
+    *
+    * @return
+    *   either the FTP uploading consumer quantity or an error message
+    */
+  def envFtpUploadingConsumerQuantity: Either[String, Int] =
+    sys.env.get(EnvFtpUploadingConsumerQuantityStr) match
+      case Some(quantity) =>
+        quantity.toIntOption.toRight(
+          s"WrongType: $EnvFtpUploadingConsumerQuantityStr has wrong type"
+        )
+      case None =>
+        Left(s"Missing: $EnvFtpUploadingConsumerQuantityStr not found in env")
 
   /** The envProcessingConsumerQuantity function reads the processing consumer
     * quantity from the environment variables.
@@ -308,19 +328,41 @@ object ConfigurationUtil:
       case e: WrongType =>
         Left(s"WrongType: $ConfigTaskTypeStr has wrong type")
 
-  /** The configFtpConsumerQuantity function reads the FTP consumer quantity
-    * from the application.conf file.
+  /** The configFtpDownloadingConsumerQuantity function reads the FTP consumer
+    * quantity from the application.conf file.
     *
     * @return
     *   either the FTP consumer quantity or an error message
     */
-  def configFtpConsumerQuantity: Either[String, Int] =
-    try Right(config.getInt(ConfigFtpConsumerQuantityStr))
+  def configFtpDownloadingConsumerQuantity: Either[String, Int] =
+    try Right(config.getInt(ConfigFtpDownloadingConsumerQuantityStr))
     catch
       case e: Missing =>
-        Left(s"Missing: $ConfigFtpConsumerQuantityStr not found in config")
+        Left(
+          s"Missing: $ConfigFtpDownloadingConsumerQuantityStr not found in config"
+        )
       case e: WrongType =>
-        Left(s"WrongType: $ConfigFtpConsumerQuantityStr has wrong type")
+        Left(
+          s"WrongType: $ConfigFtpDownloadingConsumerQuantityStr has wrong type"
+        )
+
+  /** The configFtpUploadingConsumerQuantity function reads the FTP uploading
+    * consumer quantity from the application.conf file.
+    *
+    * @return
+    *   either the FTP uploading consumer quantity or an error message
+    */
+  def configFtpUploadingConsumerQuantity: Either[String, Int] =
+    try Right(config.getInt(ConfigFtpUploadingConsumerQuantityStr))
+    catch
+      case e: Missing =>
+        Left(
+          s"Missing: $ConfigFtpUploadingConsumerQuantityStr not found in config"
+        )
+      case e: WrongType =>
+        Left(
+          s"WrongType: $ConfigFtpUploadingConsumerQuantityStr has wrong type"
+        )
 
   /** The configProcessingConsumerQuantity function reads the processing
     * consumer quantity from the application.conf file.

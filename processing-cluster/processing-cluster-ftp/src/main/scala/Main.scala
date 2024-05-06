@@ -6,14 +6,19 @@
   */
 
 import com.rabbitmq.client.Channel
-import configuration.ConfigurationUtil.configFtpConsumerQuantity
-import configuration.ConfigurationUtil.envFtpConsumerQuantity
-import messaging.FileDownloadingManager
+import configuration.ConfigurationUtil.configFtpDownloadingConsumerQuantity
+import configuration.ConfigurationUtil.configFtpUploadingConsumerQuantity
+import configuration.ConfigurationUtil.envFtpDownloadingConsumerQuantity
+import configuration.ConfigurationUtil.envFtpUploadingConsumerQuantity
+
+import messaging.FtpOperationManager
 import messaging.MessagingUtil
 
-val DefaultFtpConsumerQuantity = 2
+val DefaultFtpDownloadingConsumerQuantity = 2
+val DefaultFtpUploadingConsumerQuantity = 2
 
-/** The main function is responsible for starting the ftp downloading service.
+/** The main function is responsible for starting the ftp downloading and
+  * uploadng service.
   *
   * @param args
   *   the arguments passed to the program
@@ -21,16 +26,32 @@ val DefaultFtpConsumerQuantity = 2
 @main def main(args: String*): Unit =
   val executeLocal = args.contains("--local")
   val channel = executeConfigurations(!executeLocal)
-  val consumerQuantity =
-    (if executeLocal then configFtpConsumerQuantity
-     else envFtpConsumerQuantity).toOption
+  val downloadingConsumerQuantity =
+    (if executeLocal then configFtpDownloadingConsumerQuantity
+     else envFtpDownloadingConsumerQuantity).toOption
       .map(_.toInt)
-      .getOrElse(DefaultFtpConsumerQuantity)
+      .getOrElse(DefaultFtpDownloadingConsumerQuantity)
+
+  val uploadingConsumerQuantity =
+    (if executeLocal then configFtpUploadingConsumerQuantity
+     else envFtpUploadingConsumerQuantity).toOption
+      .map(_.toInt)
+      .getOrElse(DefaultFtpUploadingConsumerQuantity)
 
   channel match
     case Left(error) => ()
     case Right(channel) =>
-      startFtpDownloadingConsumers(channel, consumerQuantity, !executeLocal)
+      startFtpDownloadingConsumers(
+        channel,
+        downloadingConsumerQuantity,
+        !executeLocal
+      )
+
+      startFtpUploadingConsumers(
+        channel,
+        uploadingConsumerQuantity,
+        !executeLocal
+      )
 
   while true do Thread.sleep(10000)
 
@@ -49,7 +70,7 @@ def executeConfigurations(dockerEnv: Boolean = true): Either[String, Channel] =
     for
       conn <- MessagingUtil.connectionFromContext(dockerEnv)
       channel <- MessagingUtil.channelDefinition(conn)
-      _ <- FileDownloadingManager
+      _ <- FtpOperationManager
         .configureFileDownloadingMessaging(channel)
     yield channel
 
@@ -83,7 +104,7 @@ def startFtpDownloadingConsumers(
 
   for _ <- 1 to quantity do
     val consumer =
-      FileDownloadingManager.createDownloadingConsumer(
+      FtpOperationManager.createDownloadingConsumer(
         channel,
         dockerEnv
       )
@@ -91,10 +112,52 @@ def startFtpDownloadingConsumers(
     consumer match
       case Left(error) => println(error)
       case Right(consumer) =>
-        FileDownloadingManager.consumeTaskDownloadingQueue(
+        FtpOperationManager.consumeTaskDownloadingQueue(
           channel,
           false,
           consumer
         ) match
-          case Left(error) => println(s"Error starting a FTP consumer: $error")
-          case Right(msg) => println(s"FTP consumer started successfully: $msg")
+          case Left(error) =>
+            println(s"Error starting a FTP downloading consumer: $error")
+          case Right(msg) =>
+            println(s"FTP downloading consumer started successfully: $msg")
+
+/** The startFtpUploadingConsumers function is responsible for starting the ftp
+  * uploading consumers.
+  *
+  * @param channel
+  *   the channel to use for the ftp uploading consumers
+  * @param quantity
+  *   the quantity of consumers to start
+  * @param dockerEnv
+  *   a boolean indicating if the service is running in a docker environment
+  *
+  * @return
+  *   a unit indicating the result of the function
+  */
+def startFtpUploadingConsumers(
+    channel: Channel,
+    quantity: Int,
+    dockerEnv: Boolean = true
+): Unit =
+  println(s"Starting $quantity ftp uploading consumers...")
+
+  for _ <- 1 to quantity do
+    val consumer =
+      FtpOperationManager.createUploadingConsumer(
+        channel,
+        dockerEnv
+      )
+
+    consumer match
+      case Left(error) => println(error)
+      case Right(consumer) =>
+        FtpOperationManager.consumeTaskUploadingQueue(
+          channel,
+          false,
+          consumer
+        ) match
+          case Left(error) =>
+            println(s"Error starting a FTP uploading consumer: $error")
+          case Right(msg) =>
+            println(s"FTP uploading consumer started successfully: $msg")

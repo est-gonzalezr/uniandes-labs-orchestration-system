@@ -1,6 +1,5 @@
-/** The DownloadingConsumer class is a consumer for the file downloading queue.
-  * It downloads a file from the ftp server, saves it to the local filesystem
-  * and publishes a message to the next queue.
+/** The UploadingConsumer class is a consumer for the file uploading queue. It
+  * uploads a file to the ftp server and publishes a message to the next queue.
   *
   * @author
   *   Esteban Gonzalez Ruales
@@ -22,24 +21,19 @@ import upickle.default.write
 
 import java.util.concurrent.Executors
 
-/** The DownloadingConsumer class is a consumer for the file downloading queue.
-  * It downloads a file from the ftp server, saves it to the local filesystem
-  * and publishes a message to the next queue. If a file can be downloaded then
-  * it publishes a message to the next queue, if not it publishes a message to
-  * the fail queue.
+/** The UploadingConsumer class is a consumer for the file uploading queue. It
+  * uploads a file to the ftp server and publishes a message to the next queue.
   *
   * @param channel
   *   the channel to use
   * @param routingKey
   *   the routing key to use
-  * @param failKey
-  *   the fail routing key to use
   * @param publishFunction
   *   the function to publish a message
   * @param ftpWorker
   *   the ftp worker to use
   */
-case class DownloadingConsumer(
+case class UploadingConsumer(
     channel: Channel,
     routingKey: RoutingKey,
     failKey: RoutingKey,
@@ -50,8 +44,8 @@ case class DownloadingConsumer(
     Executors.newScheduledThreadPool(1)
 
   /** The handleDelivery function handles the delivery of a message from the
-    * queue. It tries to download a file from the ftp server and depending on
-    * the result it publishes a message to the next queue or to the fail queue.
+    * queue. It tries to upload a file to the ftp server and depending on the
+    * result it publishes a message to the next queue or to the fail queue.
     *
     * @param consumerTag
     * @param envelope
@@ -67,35 +61,36 @@ case class DownloadingConsumer(
     val message = body.map(_.toChar).mkString
     println(s" [x] Received $message")
 
-    // point of failure if any key or value is not a string
     val messageMap = read[Map[String, String]](body)
     val ftp_file_path = messageMap("ftp_file_path")
+    val ftp_file_destination = messageMap("ftp_file_destination")
 
-    FtpWorker.fileFromPath(ftpWorker, ftp_file_path) match
+    FileManager.fileFromLocal(ftp_file_path) match
       case Left(error) =>
         val errorMap = messageMap + ("error" -> error) + ("status" -> "aborted")
         val errorString = write(errorMap)
         publishFunction(channel, errorString, failKey)
       case Right(file) =>
-        FileManager.fileToLocal(file, ftp_file_path) match
+        FtpWorker.fileToPath(
+          ftpWorker,
+          ftp_file_destination,
+          file
+        ) match
+          case Right(_) =>
+            publishFunction(channel, write(messageMap), routingKey)
           case Left(error) =>
             val errorMap =
               messageMap + ("error" -> error) + ("status" -> "aborted")
             val errorString = write(errorMap)
             publishFunction(channel, errorString, failKey)
-          case Right(_) =>
-            publishFunction(channel, message, routingKey)
 
-    channel.basicAck(envelope.getDeliveryTag(), false)
+    channel.basicAck(envelope.getDeliveryTag, false)
 
-  /** The startScheduledNoOp function starts a scheduled task to send a NoOp
-    * command to the ftp server every minute.
-    */
   def startScheduledNoOp(): Unit =
     executorService.scheduleAtFixedRate(
       () =>
         val noopResult = FtpWorker.sendNoOp(ftpWorker)
-        println(s" [-] Downloading Consumer NoOp result: $noopResult")
+        println(s" [-] Uploading Consumer NoOp result: $noopResult")
       ,
       0,
       1,

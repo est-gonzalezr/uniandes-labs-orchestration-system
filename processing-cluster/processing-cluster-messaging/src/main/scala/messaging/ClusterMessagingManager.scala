@@ -28,6 +28,8 @@ private val TaskDownloadingQueue = QueueName("local_task_downloading_queue")
 private val TaskDownloadingRoutingKey = RoutingKey(
   "local.task.downloading"
 )
+private val TaskUploadingQueue = QueueName("local_task_uploading_queue")
+private val TaskUploadingRoutingKey = RoutingKey("local.task.uploading")
 private val TaskProcessingQueue = QueueName("local_task_processing_queue")
 private val TaskProcessingRoutingKey = RoutingKey("local.task.processing")
 private val GlobalProcessingExchangeType = ExchangeType.Topic
@@ -92,6 +94,19 @@ object ClusterMessagingManager:
             TaskDownloadingQueue,
             LocalProcessingExchange,
             TaskDownloadingRoutingKey
+          )
+
+        _taskUploadingQueueDeclared <- MessagingUtil.channelWithQueue(
+          channel,
+          TaskUploadingQueue
+        )
+
+        _taskUploadingQueueBindedToExchange <- MessagingUtil
+          .bindedQueueWithExchange(
+            channel,
+            TaskUploadingQueue,
+            LocalProcessingExchange,
+            TaskUploadingRoutingKey
           )
 
         _taskProcessingQueueDeclared <- MessagingUtil

@@ -57,6 +57,20 @@ object FileManager:
       Right(s"File written: $filePath")
     catch case e: Exception => Left(e.toString())
 
+  /** Reads a file from the local directory
+    *
+    * @param filePath
+    *   the name of the file to read
+    * @return
+    *   Either a string with the error message or the file as an array of bytes
+    */
+  def fileFromLocal(filePath: String): Either[String, Array[Byte]] =
+    try
+      val path = pathToLocal(filePath)
+      val file = read.bytes(path)
+      Right(file)
+    catch case e: Exception => Left(e.toString())
+
   /** Deletes a file from the local directory
     *
     * @param filePath
@@ -70,18 +84,4 @@ object FileManager:
       val path = pathToLocal(filePath)
       remove(path)
       Right(s"File deleted: $filePath")
-    catch case e: Exception => Left(e.toString())
-
-  /** Reads a file from the local directory
-    *
-    * @param filePath
-    *   the name of the file to read
-    * @return
-    *   Either a string with the error message or the file as an array of bytes
-    */
-  def fileFromLocal(filePath: String): Either[String, Array[Byte]] =
-    try
-      val path = pathToLocal(filePath)
-      val file = read.bytes(path)
-      Right(file)
     catch case e: Exception => Left(e.toString())
