@@ -22,6 +22,8 @@ ULOS has many components that work together to make the whole system work.
 
 ## Global Processing Engine
 
+![Proyecto de Grado - GPE Messaging Layout](https://github.com/est-gonzalezr/uniandes-labs-orchestration-system/assets/74991415/1ed5277c-20f1-4ba9-aabd-06c72984cec3)
+
 The Global Processing Engine (GPE) is the main distribution point of the orchestration system. The GPE receives messages sent from (possibly) an API that has received requests to process tasks from its users. The tasks are rerouted to processing clusters that take care of processing the tasks and sending back the result. Having the result the GPE can reroute the results back to the API for storage and notification to the users.
 
 ## Processing Cluster
