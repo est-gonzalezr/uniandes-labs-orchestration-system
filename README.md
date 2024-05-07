@@ -16,7 +16,9 @@ git clone https://github.com/est-gonzalezr/uniandes-labs-orchestration-system
 
 ULOS has many components that work together to make the whole system work.
 
-![Proyecto de Grado - Components](https://github.com/est-gonzalezr/uniandes-labs-orchestration-system/assets/74991415/a270ffcb-8ab8-484f-a962-700b890fd5f0)# Uniandes Labs Orchestration System (ULOS)
+![Proyecto de Grado - Components](https://github.com/est-gonzalezr/uniandes-labs-orchestration-system/assets/74991415/a270ffcb-8ab8-484f-a962-700b890fd5f0)
+
+# Uniandes Labs Orchestration System (ULOS)
 
 ## Global Processing Engine
 
