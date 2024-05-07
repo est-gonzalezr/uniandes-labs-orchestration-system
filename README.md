@@ -20,6 +20,8 @@ ULOS has many components that work together to make the whole system work.
 
 ![Proyecto de Grado - Components](https://github.com/est-gonzalezr/uniandes-labs-orchestration-system/assets/74991415/a270ffcb-8ab8-484f-a962-700b890fd5f0)
 
+ULOS consists of only the Global Processing Engine (GPE) and the Processing Clusters (PCs) but a whole overview of how the architecture should look is included.
+
 ## Global Processing Engine
 
 ![Proyecto de Grado - GPE Messaging Layout](https://github.com/est-gonzalezr/uniandes-labs-orchestration-system/assets/74991415/1ed5277c-20f1-4ba9-aabd-06c72984cec3)
