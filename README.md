@@ -1,7 +1,9 @@
 # Uniandes Labs Orchestration System (ULOS)
 
 ## Author
+
 - Esteban Gonzalez Ruales
+
 # Project Description
 
 The Uniandes Labs Orchestration System (ULOS) is a system that automates the execution of tasks in labs across the Uniandes campus.
@@ -14,9 +16,7 @@ git clone https://github.com/est-gonzalezr/uniandes-labs-orchestration-system
 
 # Components
 
-ULOS has many componentes that work together to make the whole system work.
-
-Diagram here maybe???
+ULOS has many components that work together to make the whole system work.
 
 ## Global Processing Engine
 
@@ -27,6 +27,7 @@ The Global Processing Engine (GPE) is the main distribution point of the orchest
 A Processing Cluster (PC) is a unit of ULOS that takes care of processing the tasks that are sent to it. The PC takes care of doing everything necessary to process the file. Each PC is divided in multiple elements to ensure that this can be done.
 
 Diagram here maybe???
+
 ### Messaging
 
 Each PC has a Messaging component that takes care of the internal distribution of the tasks to ensure that all steps to process a task are followed. The Messaging component consists on a RabbitMQ broker and a Scala companion to set it up. The component first sets up a consumer to consume tasks from the GPE. Afterwards it sets up all the message queues that it needs to store the messages it gets from the GPE and from internal components of the CP. The decision to make use of a message broker like RabbitMQ was meant to let the different internal components of the PC to execute at different speeds and avoid bottlenecks. This allows that at times of demand, the system can process many tasks without having to worry about its capacity because the messages are stored until they are processed. Also, since there can be many PCs the load will be balanced between the PCs that are instantiated.
@@ -50,6 +51,7 @@ The production deployment is meant for production use although it can also be us
 ### Dependencies
 
 The dependencies for the project are:
+
 - Docker (Everything needed to run docker containers)
 
 Make sure you have these dependencies installed before attempting to run the project. For macOS you can install these dependencies with Homebrew by running the following commands:
@@ -99,8 +101,8 @@ Since the deployment is automated you shouldn't have to worry about much when ru
 
 ```yaml
 ports:
-- 15673:15672
-- 5673:5672
+  - 15673:15672
+  - 5673:5672
 ```
 
 For example, in the above example the docker container port `15672` is being mapped to the host machine port `15673`. As you could notice, the correspondence of ports is not the same and this is not required. This can be used as an advantage if you want to deploy more than one component to the same machine. For example, you could deploy the GPE's RabbitMQ service to port `5672` of a machine and the PC's RabbitMQ service to port `5673` of the same machine. You can leverage this if you don't have many machines to deploy the service on or if you don't need to deploy many processing clusters.
@@ -113,7 +115,7 @@ docker compose up -d
 
 This command will automatically signal docker to start the RabbitMQ server and the GPE to set up the project. In Docker Desktop you can see the compose.
 
-The `rabbitmq-global` container exposes 2 ports, commonly `5672` and `15672` if you didn't configure other ones. On whichever machine you deploy the container you should be able  to access the messaging service on port `5672` and access its management interface on port `15672`. This can be done to check on operations, testing, or debugging. Having this set you should be able to connect from any machine to the machine hosting the docker container if you know the IP address of the machine and the container port. Direct messaging between brokers is not advised and has not been tested since RabbitMQ recommends the [Federation plugin](https://www.rabbitmq.com/docs/federation) to transmit messages between brokers without requiring clustering.
+The `rabbitmq-global` container exposes 2 ports, commonly `5672` and `15672` if you didn't configure other ones. On whichever machine you deploy the container you should be able to access the messaging service on port `5672` and access its management interface on port `15672`. This can be done to check on operations, testing, or debugging. Having this set you should be able to connect from any machine to the machine hosting the docker container if you know the IP address of the machine and the container port. Direct messaging between brokers is not advised and has not been tested since RabbitMQ recommends the [Federation plugin](https://www.rabbitmq.com/docs/federation) to transmit messages between brokers without requiring clustering.
 
 #### Startup for Processing Cluster
 
