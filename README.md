@@ -44,6 +44,10 @@ The FTP Downloading (FTPD) component is the first component to process the tasks
 
 The Processing component consumes messages left by the FTP Downloading component and processes them. It takes care of making sure that the files can be read and that the inner layout of the files (folder layout, necessary files) matches the layout needed for processing a task. Although the task is supposed to be executed and the result returned, the functionality is not yet implemented so the component messages if the files meet the criteria to be executed.
 
+
+![Proyecto de Grado - Overall Messaging Layout](https://github.com/est-gonzalezr/uniandes-labs-orchestration-system/assets/74991415/27896792-3726-47c0-b323-a626c6a15a47)
+
+
 # Deployment
 
 ULOS has many deployment combinations that can work but not all have been tested. Here we show the ones that have been tested and talk about some other combinations that can be theoretically be achieved.
