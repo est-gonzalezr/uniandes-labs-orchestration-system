@@ -30,7 +30,7 @@ The Global Processing Engine (GPE) is the main distribution point of the orchest
 
 A Processing Cluster (PC) is a unit of ULOS that takes care of processing the tasks that are sent to it. The PC takes care of doing everything necessary to process the file. Each PC is divided in multiple elements to ensure that this can be done.
 
-Diagram here maybe???
+![Proyecto de Grado - PC Messaging Layout](https://github.com/est-gonzalezr/uniandes-labs-orchestration-system/assets/74991415/a3000084-dd17-4120-9f66-92e7c284d9b6)
 
 ### Messaging
 
