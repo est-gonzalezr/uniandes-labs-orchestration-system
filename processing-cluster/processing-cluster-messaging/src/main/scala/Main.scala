@@ -23,12 +23,15 @@ import messaging.MessagingUtil
   val configurationResult = executeConfigurations(!executeLocal)
 
   configurationResult match
-    case Right(localChannel) =>
-      startParsingClusterConsumer(localChannel)
     case Left(error) =>
       println(s"Error: $error")
-
-  while true do Thread.sleep(10000)
+    case Right(localChannel) =>
+      startClusterConsumer(localChannel) match
+        case Left(error) =>
+          println("Cluster consumer not started successfully: Shutting down...")
+        case Right(msg) =>
+          println("Cluster consumer started successfully: Running...")
+          while true do Thread.sleep(10000)
 
 /** The executeConfigurations function configures the local and global parsing
   * clusters and starts the parsing cluster consumers.
@@ -61,16 +64,16 @@ def executeConfigurations(
       println(s"Local configuration error: $localError")
       Left(localError)
 
-/** The startParsingClusterConsumers function starts the parsing cluster
-  * consumers that consume the global parsing queue and publish the messages to
-  * the local parsing system.
+/** The startClusterConsumer function starts the parsing cluster consumer that
+  * consume the global parsing queue and publish the messages to the local
+  * system.
   *
   * @param localChannel
   *   the local channel
   */
-def startParsingClusterConsumer(
+def startClusterConsumer(
     localChannel: Channel
-): Unit =
+): Either[String, String] =
   println(s"Starting cluster consumer...")
 
   val consumer =
@@ -83,5 +86,9 @@ def startParsingClusterConsumer(
     false,
     consumer
   ) match
-    case Left(error) => println(s"Error starting a cluster consumer: $error")
-    case Right(msg)  => println(s"Cluster consumer started successfully: $msg")
+    case Left(error) =>
+      println(s"Error starting the cluster consumer: $error")
+      Left(s"Error starting the cluster consumer: $error")
+    case Right(msg) =>
+      println(s"Cluster consumer started successfully: $msg")
+      Right(s"Cluster consumer started successfully: $msg")

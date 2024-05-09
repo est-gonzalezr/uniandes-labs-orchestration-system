@@ -19,13 +19,30 @@ import messaging.MessagingUtil
   val configurationResult = executeConfigurations(!executeLocal)
 
   configurationResult match
+    case Left(error) =>
+      println(s"Error: $error")
     case Right(channel) =>
       startTaskConsumer(channel)
       startResultConsumer(channel)
-    case Left(error) =>
-      println(s"Error: $error")
 
-  while true do Thread.sleep(10000)
+      (startResultConsumer(channel), startTaskConsumer(channel)) match
+        case (Left(_), Left(_)) =>
+          println(
+            "Neither the task consumer nor the result consumer started successfully: Shutting down..."
+          )
+        case (Left(_), Right(_)) =>
+          println(
+            "The task consumer started successfully, but the result consumer did not: Shutting down..."
+          )
+        case (Right(_), Left(_)) =>
+          println(
+            "The result consumer started successfully, but the task consumer did not: Shutting down..."
+          )
+        case (Right(_), Right(_)) =>
+          println(
+            "Both the task consumer and the result consumer started successfully: Running..."
+          )
+          while true do Thread.sleep(10000)
 
 /** The executeConfigurations function configures global messaging.
   *
@@ -57,15 +74,22 @@ def executeConfigurations(dockerEnv: Boolean = true): Either[String, Channel] =
   *
   * @param localChannel
   *   the local channel
+  *
+  * @return
+  *   either a string with an error message or a string indicating success
   */
-def startTaskConsumer(localChannel: Channel): Unit =
+def startTaskConsumer(localChannel: Channel): Either[String, String] =
   println("Starting task consumer...")
 
   val consumer = GlobalMessagingManager.createTaskConsumer(localChannel)
 
   GlobalMessagingManager.consumeTaskQueue(localChannel, false, consumer) match
-    case Left(error) => println(s"Error starting a task consumer: $error")
-    case Right(msg)  => println(s"Task consumer started successfully: $msg")
+    case Left(error) =>
+      println(s"Error starting the task consumer: $error")
+      Left(error)
+    case Right(msg) =>
+      println(s"Task consumer started successfully: $msg")
+      Right(msg)
 
 /** The startResultConsumer function starts the result consumers that consume
   * the global results queue and publish the messages to the user results queue
@@ -73,12 +97,19 @@ def startTaskConsumer(localChannel: Channel): Unit =
   *
   * @param localChannel
   *   the local channel
+  *
+  * @return
+  *   either a string indicating an error or a string indicating success
   */
-def startResultConsumer(localChannel: Channel): Unit =
+def startResultConsumer(localChannel: Channel): Either[String, String] =
   println("Starting result consumer...")
 
   val consumer = GlobalMessagingManager.createResultConsumer(localChannel)
 
   GlobalMessagingManager.consumeResultQueue(localChannel, false, consumer) match
-    case Left(error) => println(s"Error starting a result consumer: $error")
-    case Right(msg)  => println(s"Result consumer started successfully: $msg")
+    case Left(error) =>
+      println(s"Error starting the result consumer: $error")
+      Left(error)
+    case Right(msg) =>
+      println(s"Result consumer started successfully: $msg")
+      Right(msg)

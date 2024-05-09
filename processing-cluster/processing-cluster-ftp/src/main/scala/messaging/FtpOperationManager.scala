@@ -157,7 +157,8 @@ object FtpOperationManager:
     *   the consumer to use for the queue consumption
     *
     * @return
-    *   a string indicating the result of the queue consumption
+    *   either a string with the error message or a string with the success
+    *   message
     */
   def consumeTaskDownloadingQueue(
       channel: Channel,
@@ -212,7 +213,8 @@ object FtpOperationManager:
     *   the consumer to use for the queue consumption
     *
     * @return
-    *   a string indicating the result of the queue consumption
+    *   either a string with the error message or a string with the success
+    *   message
     */
   def consumeTaskUploadingQueue(
       channel: Channel,

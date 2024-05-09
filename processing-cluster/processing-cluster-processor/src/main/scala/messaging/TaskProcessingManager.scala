@@ -141,7 +141,8 @@ object TaskProcessingManager:
     *   the consumer to use for the queue consumption
     *
     * @return
-    *   a string indicating the result of the queue consumption
+    *   either a string with the error message or a string with the success
+    *   message
     */
   def consumeTaskProcessingQueue(
       channel: Channel,

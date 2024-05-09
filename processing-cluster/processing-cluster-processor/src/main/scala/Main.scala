@@ -28,7 +28,9 @@ val DefaultProcessingConsumerQuantity = 5
     (if executeLocal then configProcessingConsumerQuantity
      else envProcessingConsumerQuantity).toOption
       .map(_.toInt)
+      .filter(_ > 0)
       .getOrElse(DefaultProcessingConsumerQuantity)
+
   val taskType =
     (if executeLocal then configTaskType
      else envTaskType)
@@ -36,12 +38,33 @@ val DefaultProcessingConsumerQuantity = 5
       .getOrElse(TaskType.Mobile)
 
   configurationResult match
-    case Right(channel) =>
-      startProcessingConsumers(channel, consumerQuantity, TaskType.Mobile)
     case Left(error) =>
       println(s"Error: $error")
+    case Right(channel) =>
+      val allConsumersStartupState =
+        startProcessingConsumers(channel, consumerQuantity, taskType).foldLeft(
+          Right(
+            "All processing consumers started successfully: Running..."
+          ): Either[
+            String,
+            String
+          ]
+        )((acc, consumerState) =>
+          consumerState match
+            case Left(_) =>
+              Left(
+                "Not all processing consumers started successfully: Shutting down..."
+              )
+            case Right(_) =>
+              acc
+        )
 
-  while true do Thread.sleep(10000)
+      allConsumersStartupState match
+        case Left(error) =>
+          println(error)
+        case Right(msg) =>
+          println(msg)
+          while true do Thread.sleep(10000)
 
 /** The executeConfigurations function is responsible for executing the
   * configurations for the processing service.
@@ -81,22 +104,20 @@ def executeConfigurations(dockerEnv: Boolean = true): Either[String, Channel] =
   *   the type of task to process
   *
   * @return
-  *   a unit indicating the result of the function
+  *   a sequence of either a string with the error message or a string with the
+  *   success message
   */
 def startProcessingConsumers(
     channel: Channel,
     quantity: Int,
     taskType: TaskType
-): Unit =
+): IndexedSeq[Either[String, String]] =
   println(s"Starting $quantity processing consumers...")
 
-  for _ <- 1 to quantity do
+  for _ <- 1 to quantity
+  yield
     val consumer =
-      TaskProcessingManager.createProcessingConsumer(
-        channel,
-        taskType
-      )
-
+      TaskProcessingManager.createProcessingConsumer(channel, taskType)
     TaskProcessingManager.consumeTaskProcessingQueue(
       channel,
       false,
@@ -104,8 +125,10 @@ def startProcessingConsumers(
     ) match
       case Left(error) =>
         println(s"Error starting a processing consumer: $error")
+        Left(error)
       case Right(msg) =>
         println(s"Processing consumer started successfully: $msg")
+        Right(msg)
 
 /** The taskMapping function maps a string to a TaskType.
   *

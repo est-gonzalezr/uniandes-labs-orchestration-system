@@ -46,9 +46,7 @@ The FTP Downloading (FTPD) component is the first component to process the tasks
 
 The Processing component consumes messages left by the FTP Downloading component and processes them. It takes care of making sure that the files can be read and that the inner layout of the files (folder layout, necessary files) matches the layout needed for processing a task. Although the task is supposed to be executed and the result returned, the functionality is not yet implemented so the component messages if the files meet the criteria to be executed.
 
-
 ![Proyecto de Grado - Overall Messaging Layout](https://github.com/est-gonzalezr/uniandes-labs-orchestration-system/assets/74991415/27896792-3726-47c0-b323-a626c6a15a47)
-
 
 # Deployment
 
@@ -152,7 +150,11 @@ FTP_PASSWORD = "fedora"
 FTP_DOWNLOADING_CONSUMER_QUANTITY = 2
 FTP_UPLOADING_CONSUMER_QUANTITY = 2
 PROCESSING_CONSUMER_QUANTITY = 5
+
+TASK_TYPE = "Web"
 ```
+
+You can change the `FTP_DOWNLOADING_CONSUMER_QUANTITY`, `FTP_UPLOADING_CONSUMER_QUANTITY` and `PROCESSING_CONSUMER_QUANTITY` env variables to change how many consumers will be started on each queue. If you define a number less than 1 the system will default to 1. The `TASK_TYPE` variable is used to define the type of task that the PC will process. This is used set at runtime what types of tasks are going to be processed.
 
 It is advised to leave the `LOCAL_RABBITMQ_HOST` and `LOCAL_RABBITMQ_PORT` variables as they are unless you know how to modify these attributes from the Docker file and are able to use them effectively as these variables make the direct communication with the processing cluster's RabbitMQ service possible. It is also advised to not modify the `LOCAL_RABBITMQ_USERNAME` and `LOCAL_RABBITMQ_PASSWORD` unless you know how to change the RabbitMQ username and password on the Dockerfile.
 

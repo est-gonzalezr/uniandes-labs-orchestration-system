@@ -2,8 +2,12 @@ import pika
 import time
 import json
 import random
+from ftplib import FTP
+from typing import BinaryIO, Optional
+import uuid
 
 from pika.spec import Exchange
+from pika.adapters.blocking_connection import BlockingChannel
 
 # RabbitMQ connection parameters
 RABBITMQ_HOST = 'localhost'
@@ -12,30 +16,87 @@ RABBITMQ_USER = 'guest'
 RABBITMQ_PASS = 'guest'
 RABBITMQ_VHOST = '/'
 
-credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
-parameters = pika.ConnectionParameters(RABBITMQ_HOST, RABBITMQ_PORT, RABBITMQ_VHOST, credentials)
-connection = pika.BlockingConnection(parameters)
-channel = connection.channel()
-
 exchange = "user_tasks_exchange"
 queue = "federated_user_tasks_queue"
 routing_key = "user.task"
 
-channel.exchange_declare(exchange=exchange, exchange_type="topic")
-channel.queue_declare(queue=queue)
-channel.queue_bind(exchange=exchange, queue=queue, routing_key=routing_key)
+ftp_host = "192.168.0.4"
+ftp_port = "22"
+ftp_user = "fedora"
+ftp_pass = "fedora"
 
-while True:
-    # input()
-    message = {
-        "task_id": f"{random.randint(1000000, 10000000)}",
-        "task_owner": f"{random.randint(1000000, 3000000)}",
-        "task_type_id": f"{random.randint(1, 4)}",
-        "ftp_file_path": f"/home/fedora/{random.choice(["email.zip", "facebook.zip", "email_uncomplete.zip", "facebook_uncomplete.zip"])}",
-        # "random_string": "aksdjflaskdjflksadjflksadjflsdkjflsakdjflsakjdfosadjfoasdkjfopsadkfjopsdjfosadkfjoadkfj"
-    }
-    message = json.dumps(message)
-    print(f" [x] Sending {message}")
-    # channel.basic_publish(exchange="local_parsing_exchange", routing_key="processing.parsing.download", body=message)
-    channel.basic_publish(exchange=exchange, routing_key=routing_key, body=message)
-    time.sleep(5)
+def file_from_system(ftp_path: str) -> Optional[BinaryIO]:
+    with open(ftp_path, "rb") as file:
+        return file
+    return None
+
+def ftp_connection(host: str, port: str, user: str, passwd: str) -> Optional[FTP]:
+    try:
+        ftp = FTP(host)
+        ftp.set_pasv(True)
+        ftp.login(user, passwd)
+        return ftp
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+
+def upload_file_to_ftp(ftp: FTP, file_bytes: BinaryIO) -> Optional[str]:
+    try:
+        file_name = f"{uuid.uuid4()}"
+        ftp.storbinary(f"STOR {file_name}", file_bytes)
+        return file_name
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+
+def configure_rabbitmq(host: str, port: int, user: str, passwd: str) -> Optional[BlockingChannel]:
+    try:
+        credentials = pika.PlainCredentials(user, passwd)
+        parameters = pika.ConnectionParameters(host, port, "/", credentials)
+        connection = pika.BlockingConnection(parameters)
+
+        channel = connection.channel()
+
+        channel.exchange_declare(exchange=exchange, exchange_type="topic")
+        channel.queue_declare(queue=queue)
+        channel.queue_bind(exchange=exchange, queue=queue, routing_key=routing_key)
+
+        return channel
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+
+def message_loop(ftp: FTP, channel: BlockingChannel) -> None:
+    while True:
+        file_path = input("Enter the file path: ")
+        file = file_from_system(file_path)
+        if file:
+            file_name = upload_file_to_ftp(ftp, file)
+            if file_name:
+                message = {
+                    "task_id": f"{file_name}",
+                    "task_owner": f"Esteban",
+                    "ftp_file_path": f"/for_execution/{file_name}.zip",
+                    # "random_string": "aksdjflaskdjflksadjflksadjflsdkjflsakdjflsakjdfosadjfoasdkjfopsadkfjopsdjfosadkfjoadkfj"
+                }
+                message = json.dumps(message)
+                print(f" [x] Sending {message}")
+                channel.basic_publish(exchange=exchange, routing_key=routing_key, body=message)
+
+def main() -> None:
+    ftp = ftp_connection(ftp_host, ftp_port, ftp_user, ftp_pass)
+    if ftp:
+        print("FTP connection established")
+        channel = configure_rabbitmq(RABBITMQ_HOST, RABBITMQ_PORT, RABBITMQ_USER, RABBITMQ_PASS)
+        if channel:
+            print("RabbitMQ connection established")
+            message_loop(ftp, channel)
+        else:
+            print("Error connecting to RabbitMQ")
+    else:
+        print("Error connecting to FTP")
+
+
+if __name__ == "__main__":
+    main()
