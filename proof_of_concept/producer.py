@@ -20,17 +20,18 @@ exchange = "user_tasks_exchange"
 queue = "federated_user_tasks_queue"
 routing_key = "user.task"
 
-ftp_host = "192.168.0.4"
-ftp_port = "22"
+ftp_host = "192.168.0.5"
 ftp_user = "fedora"
 ftp_pass = "fedora"
 
 def file_from_system(ftp_path: str) -> Optional[BinaryIO]:
-    with open(ftp_path, "rb") as file:
-        return file
-    return None
+    try:
+        return open(ftp_path, "rb")
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
 
-def ftp_connection(host: str, port: str, user: str, passwd: str) -> Optional[FTP]:
+def ftp_connection(host: str, user: str, passwd: str) -> Optional[FTP]:
     try:
         ftp = FTP(host)
         ftp.set_pasv(True)
@@ -42,7 +43,8 @@ def ftp_connection(host: str, port: str, user: str, passwd: str) -> Optional[FTP
 
 def upload_file_to_ftp(ftp: FTP, file_bytes: BinaryIO) -> Optional[str]:
     try:
-        file_name = f"{uuid.uuid4()}"
+        # file_name = f"for_execution/{uuid.uuid4()}.zip"
+        file_name = f"{uuid.uuid4()}.zip"
         ftp.storbinary(f"STOR {file_name}", file_bytes)
         return file_name
     except Exception as e:
@@ -73,11 +75,13 @@ def message_loop(ftp: FTP, channel: BlockingChannel) -> None:
         file = file_from_system(file_path)
         if file:
             file_name = upload_file_to_ftp(ftp, file)
+            file.close()
             if file_name:
                 message = {
                     "task_id": f"{file_name}",
                     "task_owner": f"Esteban",
-                    "ftp_file_path": f"/for_execution/{file_name}.zip",
+                    # mandar las cosas sin '/' al principio
+                    "ftp_downloading_path": f"{file_name}",
                     # "random_string": "aksdjflaskdjflksadjflksadjflsdkjflsakdjflsakjdfosadjfoasdkjfopsadkfjopsdjfosadkfjoadkfj"
                 }
                 message = json.dumps(message)
@@ -85,7 +89,7 @@ def message_loop(ftp: FTP, channel: BlockingChannel) -> None:
                 channel.basic_publish(exchange=exchange, routing_key=routing_key, body=message)
 
 def main() -> None:
-    ftp = ftp_connection(ftp_host, ftp_port, ftp_user, ftp_pass)
+    ftp = ftp_connection(ftp_host, ftp_user, ftp_pass)
     if ftp:
         print("FTP connection established")
         channel = configure_rabbitmq(RABBITMQ_HOST, RABBITMQ_PORT, RABBITMQ_USER, RABBITMQ_PASS)

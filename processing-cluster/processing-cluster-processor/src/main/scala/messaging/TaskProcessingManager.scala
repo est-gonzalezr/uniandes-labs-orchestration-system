@@ -25,6 +25,7 @@ private val LocalProcessingExchange = ExchangeName("local_processing_exchange")
 private val LocalProcessingExchangeType = ExchangeType.Topic
 private val TaskProcessingQueue = QueueName("local_task_processing_queue")
 private val GlobalResultsRoutingKey = RoutingKey("global.task.results")
+private val TaskUploadingRoutingKey = RoutingKey("local.task.uploading")
 
 /** The TaskProcessingManager object is responsible for configuring the task
   * processing portion of the cluster messaging.
@@ -125,7 +126,7 @@ object TaskProcessingManager:
   ): DefaultConsumer =
     ProcessingConsumer(
       channel,
-      GlobalResultsRoutingKey,
+      TaskUploadingRoutingKey,
       GlobalResultsRoutingKey,
       publishMessage,
       taskType

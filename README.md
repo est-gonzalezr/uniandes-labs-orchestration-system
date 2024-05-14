@@ -1,5 +1,8 @@
 # Uniandes Labs Orchestration System (ULOS)
 
+Poner que todas las llaves tienen que ser strings
+Poner que el nombre del archivo se tiene que mandar sin / al final
+
 ## Author
 
 - Esteban Gonzalez Ruales
@@ -170,27 +173,27 @@ At this point most of the configuration has already been done but some things ar
 
 ```zsh
 rabbitmqctl set_parameter federation-upstream <cluster-name> "{\"uri\":\"amqp://<username>:<password>@<host>:<port>\"}"
-rabbitmqctl set_parameter federation-upstream-set processing_clusters "[{\"upstream\": \"<cluster-name>\"}]"
+rabbitmqctl set_parameter federation-upstream-set processing-clusters "[{\"upstream\": \"<cluster-name>\"}]"
 ```
 
-These commands are responsible for defining a new upstream and adding it to the `processing_clusters`. The `processing_clusters` set is part of an automatically defined policy that federates queues from the PCs towards the GPE. Unfortunately, RabbitMQ doesn't yet have a functionality to clusters to a set without having to redefine the whole set so if you want to add a new upstream you also have to redefine the `processing_clusters` parameter. An example of this can be seen below:
+These commands are responsible for defining a new upstream and adding it to the `processing-clusters`. The `processing-clusters` set is part of an automatically defined policy that federates queues from the PCs towards the GPE. Unfortunately, RabbitMQ doesn't yet have a functionality to clusters to a set without having to redefine the whole set so if you want to add a new upstream you also have to redefine the `processing-clusters` parameter. An example of this can be seen below:
 
 ```zsh
-rabbitmqctl set_parameter federation-upstream processing-cluster-1 "{\"uri\":\"amqp://guest:guest@host.docker.internal:5673\"}"
-rabbitmqctl set_parameter federation-upstream-set processing_clusters "[{\"upstream\": \"processing-cluster-1\"}]"
+rabbitmqctl set_parameter federation-upstream processing-cluster-1 "{\"uri\":\"amqp://guest:guest@host.docker.internal:5674\"}"
+rabbitmqctl set_parameter federation-upstream-set processing-clusters "[{\"upstream\": \"processing-cluster-1\"}]"
 
 # If later I want to add more upstreams I would have to do the following:
 
-rabbitmqctl set_parameter federation-upstream processing-cluster-2 "{\"uri\":\"amqp://guest:guest@192.168.2.10:5672\"}"
-rabbitmqctl set_parameter federation-upstream-set processing_clusters "[{\"upstream\": \"processing-cluster-1\"}, {\"upstream\": \"processing-cluster-2\"}]"
+rabbitmqctl set_parameter federation-upstream processing-cluster-2 "{\"uri\":\"amqp://guest:guest@192.168.2.10:5674\"}"
+rabbitmqctl set_parameter federation-upstream-set processing-clusters "[{\"upstream\": \"processing-cluster-1\"}, {\"upstream\": \"processing-cluster-2\"}]"
 ```
 
 If you know how many PCs you would have from the start (you can always add more later anyways) you could define them all at once.
 
 ```zsh
-rabbitmqctl set_parameter federation-upstream processing-cluster-1 "{\"uri\":\"amqp://guest:guest@host.docker.internal:5673\"}"
-rabbitmqctl set_parameter federation-upstream processing-cluster-2 "{\"uri\":\"amqp://guest:guest@192.168.2.10:5672\"}"
-rabbitmqctl set_parameter federation-upstream-set processing_clusters '[{"upstream": "processing-cluster-1"}, {"upstream": "processing-cluster-2"}]'
+rabbitmqctl set_parameter federation-upstream processing-cluster-1 "{\"uri\":\"amqp://guest:guest@host.docker.internal:5674\"}"
+rabbitmqctl set_parameter federation-upstream processing-cluster-2 "{\"uri\":\"amqp://guest:guest@192.168.2.10:5674\"}"
+rabbitmqctl set_parameter federation-upstream-set processing-clusters '[{"upstream": "processing-cluster-1"}, {"upstream": "processing-cluster-2"}]'
 ```
 
 With this the queues will federate automatically from the PCs defined to the GPE.
@@ -198,7 +201,7 @@ With this the queues will federate automatically from the PCs defined to the GPE
 Lastly, on whatever service is implemented before the GPE, it should also set up federation policies with the GPE. By default, the GPE already has a queue meant to be federated called `federated_user_results_queue` that stores the results of the tasks that the users send. To federate the queues from the GPE to the implemented service it is necessary to run the following commands wherever the implemented service runs:
 
 ```zsh
-rabbitmqctl set_parameter federation-upstream global_processing "{\"uri\":\"amqp://guest:guest@<gpe_host>:5672\"}"
+rabbitmqctl set_parameter federation-upstream global-processing "{\"uri\":\"amqp://guest:guest@<gpe_host>:5672\"}"
 rabbitmqctl set_policy --apply-to queues federated-user-results-queue "^federated_user_results_queue" "{\"federation-upstream\":\"global-processing\"}"
 ```
 

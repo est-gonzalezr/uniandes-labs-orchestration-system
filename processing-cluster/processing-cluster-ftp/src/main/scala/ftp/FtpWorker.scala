@@ -100,7 +100,7 @@ object FtpWorker:
       case e: SocketException =>
         Left("SocketException: Couldn't set socket timeout")
       case e: IOException => Left(s"IOException: ${e.getMessage()}")
-      case e: Exception   => Left(s"Exception: e.getMessage()")
+      case e: Exception   => Left(s"Exception: ${e.getMessage()}")
 
   /** Gets the file from the server and returns it as an array of bytes.
     * @param client
@@ -115,14 +115,20 @@ object FtpWorker:
       ftpWorker: FtpWorker,
       path: String
   ): Either[String, Array[Byte]] =
-    val file = ftpWorker.client.retrieveFileStream(path)
+    try
+      val file = ftpWorker.client.retrieveFileStream(path)
 
-    if file == null then Left(s"File not found: $path")
-    else
-      val fileData = Right(file.readAllBytes())
-      file.close()
-      ftpWorker.client.completePendingCommand()
-      fileData
+      if file == null then Left(s"File not found: $path")
+      else
+        val fileData = Right(file.readAllBytes())
+        file.close()
+        ftpWorker.client.completePendingCommand()
+        fileData
+    catch
+      case e: IOException =>
+        Left(s"IOException: Couldn't retrieve file: ${e.getMessage()}")
+      case e: Exception =>
+        Left(s"Exception: Couldn't retrieve file: ${e.getMessage()}")
 
   /** Stores a file in the server.
     *
@@ -141,12 +147,15 @@ object FtpWorker:
       path: String,
       file: Array[Byte]
   ): Either[String, true] =
-    // turn array of bytes into input stream
-    val inputStream: InputStream = new ByteArrayInputStream(file)
-
-    ftpWorker.client.storeFile(path, inputStream) match
-      case false => Left(s"Couldn't store file: $path")
-      case true  => Right(true)
+    try
+      // turn array of bytes into input stream
+      val inputStream: InputStream = new ByteArrayInputStream(file)
+      val result = ftpWorker.client.storeFile(path, inputStream)
+      if !result then Left(s"Couldn't store file: $path")
+      else Right(true)
+    catch
+      case e: IOException =>
+        Left(s"IOException: Couldn't store file: ${e.getMessage()}")
 
   /** Sends a NoOp command to the server to keep the connection alive.
     * @param ftpWorker
@@ -155,10 +164,35 @@ object FtpWorker:
     * @return
     *   Either a string with the error message or a boolean
     */
-  def sendNoOp(ftpWorker: FtpWorker): Either[String, Boolean] =
+  def sendNoOp(ftpWorker: FtpWorker): Either[String, true] =
     try
       val result = ftpWorker.client.sendNoOp()
-      Right(result)
+      if !result then Left("NoOp failed")
+      else Right(true)
     catch
       case e: IOException =>
         Left(s"IOException: NoOp failed: ${e.getMessage()}")
+
+  /** Deletes a file from the server.
+    *
+    * @param ftpWorker
+    *   the client to use to connect to the server
+    * @param path
+    *   the path of the file to delete
+    *
+    * @return
+    *   Either a string with the error message or a boolean
+    */
+  def deleteFromPath(
+      ftpWorker: FtpWorker,
+      path: String
+  ): Either[String, true] =
+    try
+      val result = ftpWorker.client.deleteFile(path)
+      if !result then Left(s"Couldn't delete file: $path")
+      else Right(true)
+    catch
+      case e: IOException =>
+        Left(s"IOException: Couldn't delete file: ${e.getMessage()}")
+      case e: Exception =>
+        Left(s"Exception: Couldn't delete file: ${e.getMessage()}")

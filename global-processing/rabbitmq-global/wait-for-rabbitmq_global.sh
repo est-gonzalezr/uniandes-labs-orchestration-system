@@ -29,7 +29,7 @@ if check_rabbitmq_status; then
     rabbitmqctl set_parameter federation-upstream $user_tasks_upstream_name "{\"uri\":\"amqp://$UPSTREAM_RABBITMQ_USERNAME:$UPSTREAM_RABBITMQ_PASSWORD@$UPSTREAM_RABBITMQ_HOST:$UPSTREAM_RABBITMQ_PORT\"}"
     rabbitmqctl set_policy --apply-to queues $user_tasks_policy_name "^$user_tasks_federated_queue" "{\"federation-upstream\":\"$user_tasks_upstream_name\"}"
 
-    global_results_cluster_name="processing_clusters"
+    global_results_cluster_name="processing-clusters"
     global_results_policy_name="federated-global-results-queue"
     global_results_federated_queue="federated_global_results_queue"
 

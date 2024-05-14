@@ -31,7 +31,7 @@ object FileManager:
     *   the path of the file in the local directory
     */
   def pathToLocal(filePath: String): Path =
-    os.Path(temporalFileFolder.toString + filePath)
+    os.Path(temporalFileFolder.toString + "/" + filePath)
 
   /** Writes a file to the local directory to store temporarily
     *

@@ -29,6 +29,8 @@ import upickle.default.write
 
 import java.io.File
 
+private val ProcessingStatus = "status_processing"
+
 /** The ProcessingConsumer class is a consumer for the task processing queue. It
   * processes a file from the local filesystem and publishes a message to the
   * next queue. If a file can be processed then it publishes a message to the
@@ -79,9 +81,9 @@ case class ProcessingConsumer(
 
     // point of failure if any key or value is not a string
     val messageMap = read[Map[String, String]](body)
-    val ftp_file_path = messageMap("ftp_file_path")
+    val local_file_path = messageMap("local_file_path")
 
-    val fileBytes = FileManager.fileFromLocal(ftp_file_path) match
+    val operationResult = FileManager.fileFromLocal(local_file_path) match
       case Left(error) =>
         handleError(error, messageMap, channel, failKey)
         Left(error)
@@ -99,17 +101,27 @@ case class ProcessingConsumer(
                 failKey
               )
 
-              handleDelete(ftp_file_path)
               Left(
-                s"Missing necessary files or folder structure: $ftp_file_path"
+                s"Missing necessary files or folder structure: $local_file_path"
               )
             else
-              handleDelete(ftp_file_path)
-              Right(fileBytes)
+              val ftp_uploading_path =
+                local_file_path.replace(".zip", "_processed.zip")
+              FileManager.fileToLocal(fileBytes, ftp_uploading_path) match
+                case Left(error) =>
+                  handleError(error, messageMap, channel, failKey)
+                  Left(error)
+                case Right(_) =>
+                  Right(
+                    messageMap + ("ftp_uploading_path" -> ftp_uploading_path)
+                  )
 
-    fileBytes match
-      case Left(error)      => println(s"Error processing file: $error")
-      case Right(fileBytes) => handleSuccess(messageMap, channel, routingKey)
+    operationResult match
+      case Left(error) => println(s"Error processing file: $error")
+      case Right(updatedMessageMap) =>
+        handleSuccess(updatedMessageMap, channel, routingKey)
+
+    handleLocalDelete(local_file_path)
 
     channel.basicAck(envelope.getDeliveryTag(), false)
 
@@ -131,7 +143,8 @@ case class ProcessingConsumer(
       channel: Channel,
       failKey: RoutingKey
   ): Unit =
-    val errorMap = messageMap + ("error" -> error) + ("status" -> "aborted")
+    val errorMap =
+      messageMap + (ProcessingStatus -> "failed") + ("error" -> error)
     val errorString = write(errorMap)
     publishFunction(channel, errorString, failKey)
 
@@ -150,18 +163,20 @@ case class ProcessingConsumer(
       channel: Channel,
       routingKey: RoutingKey
   ): Unit =
-    val successMap = messageMap + ("status" -> "success")
+    val successMap = messageMap + (ProcessingStatus -> "success")
     val successString = write(successMap)
     publishFunction(channel, successString, routingKey)
 
-  /** The handleDelete function deletes a file from the local filesystem.
+  /** The handleLocalDelete function deletes a file from the local filesystem.
     *
-    * @param ftp_file_path
+    * @param file_path
     *   the path of the file to delete
     */
-  def handleDelete(
-      ftp_file_path: String
+  def handleLocalDelete(
+      file_path: String
   ): Unit =
-    FileManager.deleteFile(ftp_file_path) match
-      case Left(error) => println(s"Error deleting file: $error")
-      case Right(_)    => println(s"File deleted: $ftp_file_path")
+    FileManager.deleteFile(file_path) match
+      case Left(error) =>
+        println(s"Error deleting file from local filesystem: $error")
+      case Right(_) =>
+        println(s"File deleted from local filesystem: $file_path")
