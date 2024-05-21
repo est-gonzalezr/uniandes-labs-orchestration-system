@@ -23,6 +23,7 @@ import configuration.ConfigurationUtil.envFtpHost
 import configuration.ConfigurationUtil.envFtpPassword
 import configuration.ConfigurationUtil.envFtpPort
 import configuration.ConfigurationUtil.envFtpUsername
+import org.apache.commons.net.ftp.FTP
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPConnectionClosedException
 
@@ -87,11 +88,12 @@ object FtpWorker:
     try
       client match
         case Left(error) => Left(error)
-        case Right(client) =>
-          client.client.connect(client.host, client.port)
-          client.client.login(client.username, client.password)
-          client.client.enterLocalPassiveMode()
-          Right(client)
+        case Right(ftpWorker) =>
+          ftpWorker.client.connect(ftpWorker.host, ftpWorker.port)
+          ftpWorker.client.login(ftpWorker.username, ftpWorker.password)
+          ftpWorker.client.enterLocalPassiveMode()
+          ftpWorker.client.setFileType(FTP.BINARY_FILE_TYPE)
+          Right(ftpWorker)
     catch
       case e: FTPConnectionClosedException =>
         Left("FTPConnectionClosedException: FTP Connection closed")
@@ -151,8 +153,12 @@ object FtpWorker:
       // turn array of bytes into input stream
       val inputStream: InputStream = new ByteArrayInputStream(file)
       val result = ftpWorker.client.storeFile(path, inputStream)
-      if !result then Left(s"Couldn't store file: $path")
-      else Right(true)
+      if !result then
+        inputStream.close()
+        Left(s"Couldn't store file: $path")
+      else
+        inputStream.close()
+        Right(true)
     catch
       case e: IOException =>
         Left(s"IOException: Couldn't store file: ${e.getMessage()}")

@@ -20,7 +20,7 @@ exchange = "user_tasks_exchange"
 queue = "federated_user_tasks_queue"
 routing_key = "user.task"
 
-ftp_host = "192.168.0.5"
+ftp_host = "192.168.0.7"
 ftp_user = "fedora"
 ftp_pass = "fedora"
 
