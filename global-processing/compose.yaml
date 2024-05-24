@@ -23,14 +23,14 @@ services:
       - source: plugins
         target: /etc/rabbitmq/enabled_plugins
     healthcheck:
-      test: [ "CMD", "rabbitmqctl", "status" ]
+      test: ["CMD", "rabbitmqctl", "status"]
       interval: 10s
       timeout: 10s
       retries: 5
     env_file:
       - .env
 
-  global-processing:
+  global-processing-engine:
     build:
       context: ./global-processing-engine
       dockerfile: Dockerfile

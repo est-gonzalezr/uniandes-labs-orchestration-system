@@ -9,6 +9,7 @@
 **/project/boot/
 **/project/plugins/project/
 **/project/local-plugins.sbt
+**/project/build.properties
 **/.history
 **/.ensime
 **/.ensime_cache/
@@ -33,3 +34,5 @@
 **\.idea
 **\.idea_modules
 **\.worksheet
+
+**temp_files**
