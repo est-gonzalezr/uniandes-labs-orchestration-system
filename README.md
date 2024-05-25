@@ -21,15 +21,13 @@ git clone https://github.com/est-gonzalezr/uniandes-labs-orchestration-system
 
 ULOS has many components that work together to make the whole system work.
 
-![Proyecto de Grado - Components](https://github.com/est-gonzalezr/uniandes-labs-orchestration-system/assets/74991415/a270ffcb-8ab8-484f-a962-700b890fd5f0)
-
 ![Components Diagram](/diagrams/components.svg)
 
 ULOS consists of only the Global Processing Engine (GPE) and the Processing Clusters (PCs) but a whole overview of how the architecture should look is included.
 
 ## Global Processing Engine
 
-![Proyecto de Grado - GPE Messaging Layout](https://github.com/est-gonzalezr/uniandes-labs-orchestration-system/assets/74991415/1ed5277c-20f1-4ba9-aabd-06c72984cec3)
+![GPE Messaging Layout](/diagrams/gpe_messaging.svg)
 
 The Global Processing Engine (GPE) is the main distribution point of the orchestration system. The GPE receives messages sent from (possibly) an API that has received requests to process tasks from its users. The tasks are rerouted to processing clusters that take care of processing the tasks and sending back the result. Having the result the GPE can reroute the results back to the API for storage and notification to the users.
 
@@ -37,7 +35,7 @@ The Global Processing Engine (GPE) is the main distribution point of the orchest
 
 A Processing Cluster (PC) is a unit of ULOS that takes care of processing the tasks that are sent to it. The PC takes care of doing everything necessary to process the file. Each PC is divided in multiple elements to ensure that this can be done.
 
-![Proyecto de Grado - PC Messaging Layout](https://github.com/est-gonzalezr/uniandes-labs-orchestration-system/assets/74991415/a3000084-dd17-4120-9f66-92e7c284d9b6)
+![PC Messaging Layout](/diagrams/pc_messaging.svg)
 
 ### Messaging
 
@@ -51,7 +49,7 @@ The FTP Downloading (FTPD) component is the first component to process the tasks
 
 The Processing component consumes messages left by the FTP Downloading component and processes them. It takes care of making sure that the files can be read and that the inner layout of the files (folder layout, necessary files) matches the layout needed for processing a task. Although the task is supposed to be executed and the result returned, the functionality is not yet implemented so the component messages if the files meet the criteria to be executed.
 
-![Proyecto de Grado - Overall Messaging Layout](https://github.com/est-gonzalezr/uniandes-labs-orchestration-system/assets/74991415/27896792-3726-47c0-b323-a626c6a15a47)
+![Overall Messaging Layout](/diagrams/overall_messaging.svg)
 
 # Deployment
 
