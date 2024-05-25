@@ -34,7 +34,7 @@ services:
     build:
       context: ./global-processing-engine
       dockerfile: Dockerfile
-    container_name: global-processing
+    container_name: global-processing-engine
     image: global-processing-engine
     networks:
       - global-processing

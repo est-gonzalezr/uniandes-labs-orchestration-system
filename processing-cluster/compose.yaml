@@ -43,5 +43,3 @@ services:
         condition: service_healthy
     env_file:
       - .env
-volumes:
-  shared-data:

@@ -1,4 +1,4 @@
-FROM sbtscala/scala-sbt:eclipse-temurin-alpine-17.0.10_7_1.9.9_3.4.0
+FROM sbtscala/scala-sbt:eclipse-temurin-alpine-22_36_1.10.0_3.4.2
 
 # Create dir
 RUN mkdir -p /app/src
