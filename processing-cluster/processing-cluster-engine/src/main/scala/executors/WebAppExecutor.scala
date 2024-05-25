@@ -4,7 +4,6 @@ import storage.FileManager
 import sys.process.Process
 
 import java.io.File
-import java.nio.file.Files
 
 object WebAppExecutor extends Executor:
   /** The execute function is responsible for executing the executor and its
@@ -60,6 +59,6 @@ object WebAppExecutor extends Executor:
 
     println(zipped)
 
-    // Files.delete(FileManager.pathToLocal(tempDir))
+    FileManager.deleteFolder(tempDir)
 
     resultFileName

@@ -41,7 +41,7 @@ object FileManager:
     * @param filePath
     *   the name of the file
     * @return
-    *   Either a string with the error message or a string with the success
+    *   either a string with the error message or a string with the success
     *   message
     */
   def fileToLocal(
@@ -63,7 +63,7 @@ object FileManager:
     * @param filePath
     *   the name of the file to read
     * @return
-    *   Either a string with the error message or the file as an array of bytes
+    *   either a string with the error message or the file as an array of bytes
     */
   def fileFromLocal(filePath: String): Either[String, Array[Byte]] =
     try
@@ -77,7 +77,7 @@ object FileManager:
     * @param filePath
     *   the name of the file to delete
     * @return
-    *   Either a string with the error message or a string with the success
+    *   either a string with the error message or a string with the success
     *   message
     */
   def deleteFile(filePath: String): Either[String, String] =
@@ -85,4 +85,20 @@ object FileManager:
       val path = pathToLocal(filePath)
       remove(path)
       Right(s"File deleted: $filePath")
+    catch case e: Exception => Left(e.toString())
+
+  /** Deletes a folder from the local directory
+    *
+    * @param folderPath
+    *   the name of the folder to delete
+    *
+    * @return
+    *   either a string with the error message or a string with the success
+    *   message
+    */
+  def deleteFolder(folderPath: String): Either[String, String] =
+    try
+      val path = pathToLocal(folderPath)
+      remove.all(path)
+      Right(s"Folder deleted: $folderPath")
     catch case e: Exception => Left(e.toString())
