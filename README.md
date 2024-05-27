@@ -1,7 +1,6 @@
 # Uniandes Labs Orchestration System
 
 Poner que todas las llaves tienen que ser strings
-Poner que el nombre del archivo se tiene que mandar sin / al final
 
 ## Author
 
@@ -222,11 +221,14 @@ rabbitmqctl set_policy --apply-to queues federated-user-results-queue "^federate
 This will allow the scripts' machine to configure an upstream to the GPC and to set a policy to allow the federation of messages from the GPC to the scripts' machine. This will allow the scripts' machine to receive the results from the GPC.
 
 
+## ⚠️ Warnings and Consideratios
 
+If you plan to make changes to the code of the project you should be aware of the following considerations:
+- Limit the messages that are sent to the ULOS to json messages with String type keys and values. This is because the ULOS is not able to handle messages with other types of keys and values.
 
+## Further Work
 
-
-
+Further work can be done to improve the project. The recommended additions and improvements can be found in the [poster](/diagrams/poster.pdf) that was created for the project.
 
 ### Dependencies
 
