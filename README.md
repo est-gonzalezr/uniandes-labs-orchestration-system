@@ -1,4 +1,4 @@
-# Uniandes Labs Orchestration System (ULOS)
+# Uniandes Labs Orchestration System
 
 Poner que todas las llaves tienen que ser strings
 Poner que el nombre del archivo se tiene que mandar sin / al final
@@ -9,19 +9,15 @@ Poner que el nombre del archivo se tiene que mandar sin / al final
 
 # Project Description
 
-The Uniandes Labs Orchestration System (ULOS) is a system that automates the execution of tasks in labs across the Uniandes campus.
+The Uniandes Labs Orchestration System (ULOS for short) is a system that automates the execution of tasks in labs across the Uniandes campus.
 
-You can download the project with the following command on whichever directory you want the repository to be placed at:
-
-```zsh
-git clone https://github.com/est-gonzalezr/uniandes-labs-orchestration-system
-```
+You can clone this repository to get the source code and run the project locally.
 
 # Components
 
 ULOS has many components that work together to make the whole system work.
 
-![Components Diagram](/diagrams/components.svg)
+![Components Diagram](/diagrams/Proyecto de Grado - Components.svg)
 
 ULOS consists of only the Global Processing Engine (GPE) and the Processing Clusters (PCs) but a whole overview of how the architecture should look is included.
 
