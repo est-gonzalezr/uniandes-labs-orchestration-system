@@ -6,9 +6,7 @@
 
 # Project Description
 
-The Uniandes Labs Orchestration System (ULOS for short) is a system that automates the execution of tasks in labs across the Uniandes campus.
-
-You can clone this repository to get the source code and run the project locally.
+The University of the Andes is in constant need to modernize and improve its capabilities to satisfy the growing curiosity and learing capability of its students. This is why the university is in constant search of projects that can augment its educational opportunities. This is where the motivation to create an orchestration system to automate laboratories that students use remotely originates from. This will allow students from various engineering disciplines to make use of. university laboratories in an easier and faster way. This way, laboratory processes will be accelerated and students won't have to spend as much time in the them. This will allow the university to have more students use the laboratories and will allow the students to have more time to do other academic activities.
 
 # Components
 
@@ -75,12 +73,12 @@ For an overall messaging layout of the system you can see the following diagram.
 
 The FTP Storage is the storage component of the ULOS. The FTPS is responsible for storing the files that are sent to the system and the results of the tasks that are processed.
 
-## Deployment
+# Deployment
 
 The deployment of the ULOS is currently done manually but can be automated with the use of Docker in the future. The current deployment requires the manual setup of the components and the configuration of variables (in configuration file) to allow the components to communicate with each other and work properly. The necessary code and files to allow the deployment with docker and env variables is already in place but further configuration is needed. The base code has already been set up to allow it to take its variables from the environment variables rather than from configuration file if the deployment is made with docker. Also, most of the docker and compose files are already in place to allow the deployment of the components with docker but they are missing key dependencies to be able to run some execution environments needed by the processing clusters to execute tasks. For now the deployment is done manually and the necessary dependencies are installed on the machine(s) that are going to run the ULOS.
 
 
-### Dependencies
+## Dependencies
 
 You should have installed the following dependencies on the machine(s) you plan to run the ULOS GPC, PCC or both:
 
@@ -95,7 +93,7 @@ You should have installed the following dependencies on the machine(s) you plan 
 
 As more execution environments are added to the ULOS more dependencies for the processing clusters will be added.
 
-### Startup Process
+## Startup Process
 
 It is necessary to start both the GPC and the PCC to allow the ULOS to work. For both you will have to configure the necessary variables to allow for the proper startup of the components and for the communication between the components.
 
@@ -122,11 +120,11 @@ If you configured the variables correctly and both the RabbitMQ server and the F
 
 If you are running the whole system on the same machine you have no need for federation between the GPC and the PCC so you can go ahead and open the python scripts that are in the `proof_of_concept` folder, change the variables inside each script to match the variables in the `application.conf` file and run the scripts to see the system in action. You should run both the `producer.py` and the `consumer.py` scripts to both be able to send and receive messages from the ULOS. The `producer.py` script will send a message to the GPC and upload a file to the FTP server and the `consumer.py` script will receive the message from the GPC and download the file from the FTP server if the execution of the task was successful. For running the scripts you will need to have Python installed on your machine and probably create a virtual environment to install the necessary dependencies. For the python dependencies you will only need `pika` to allow the scripts to communicate with the RabbitMQ service.
 
-#### Startup for components in different machines
+### Startup for components in different machines
 
 If you are deploying the components in different machines you will have to configure the federation between the GPC and the PCC. To do this you will have to follow the previous steps and some extra steps to allow the federation of messages between components to work.
 
-##### Federation between GPC and PCC
+#### Federation between GPC and PCC
 
 To allow the federation between the GPC and the PCC you will have to run some commands on the terminal to allow the federation to work. On the machine where a processing cluster is running you will have to run the following commands:
 
@@ -179,7 +177,7 @@ rabbitmqctl set_parameter federation-upstream-set processing-clusters '[{"upstre
 
 In the example above we are configuring two processing clusters to be part of the federation upstream set of the global processing engine.
 
-##### Federation between Scripts and GPC
+#### Federation between Scripts and GPC
 
 If you are running the scripts in a different machine than the GPC you will have to configure the federation between the scripts and the GPC. To do this you will have to run the following commands on the machine where the GPC is running:
 
@@ -218,11 +216,11 @@ rabbitmqctl set_policy --apply-to queues federated-user-results-queue "^federate
 
 This will allow the scripts' machine to configure an upstream to the GPC and to set a policy to allow the federation of messages from the GPC to the scripts' machine. This will allow the scripts' machine to receive the results from the GPC.
 
-## ⚠️ Warnings and Consideratios
+# ⚠️ Warnings and Consideratios
 
 If you plan to make changes to the code of the project you should be aware of the following considerations:
 - Limit the messages that are sent to the ULOS to json messages with String type keys and values. This is because the ULOS is not able to handle messages with other types of keys and values.
 
-## Further Work
+# Further Work
 
 Further work can be done to improve the project. The recommended additions and improvements can be found in the [poster](/diagrams/poster.pdf) that was created for the project.
