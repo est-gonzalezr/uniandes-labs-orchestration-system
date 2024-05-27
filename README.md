@@ -15,9 +15,13 @@ You can clone this repository to get the source code and run the project locally
 
 # Components
 
-ULOS has many components that work together to make the whole system work.
+ULOS has many components that work together to make the whole system work. On the following diagram you can see the components that make up the whole system.
 
-![Components Diagram](/diagrams/Proyecto de Grado - Components.svg)
+![Components Diagram](/diagrams/components.svg)
+
+For the implementation you can see the used technologies in the following diagram.
+
+![Technologies Diagram](/diagrams/components_technologies.svg)
 
 ULOS consists of only the Global Processing Engine (GPE) and the Processing Clusters (PCs) but a whole overview of how the architecture should look is included.
 
