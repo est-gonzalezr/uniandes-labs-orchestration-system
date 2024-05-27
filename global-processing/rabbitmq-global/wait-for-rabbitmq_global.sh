@@ -25,7 +25,7 @@ if check_rabbitmq_status; then
     user_tasks_policy_name="federated-user-tasks-queue"
     user_tasks_federated_queue="federated_user_tasks_queue"
 
-    # Set federation for the messages that the users send to the api
+    # Set federation for the messages that the users send
     rabbitmqctl set_parameter federation-upstream $user_tasks_upstream_name "{\"uri\":\"amqp://$UPSTREAM_RABBITMQ_USERNAME:$UPSTREAM_RABBITMQ_PASSWORD@$UPSTREAM_RABBITMQ_HOST:$UPSTREAM_RABBITMQ_PORT\"}"
     rabbitmqctl set_policy --apply-to queues $user_tasks_policy_name "^$user_tasks_federated_queue" "{\"federation-upstream\":\"$user_tasks_upstream_name\"}"
 
