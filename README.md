@@ -1,7 +1,5 @@
 # Uniandes Labs Orchestration System
 
-Poner que todas las llaves tienen que ser strings
-
 ## Author
 
 - Esteban Gonzalez Ruales
@@ -30,7 +28,7 @@ The Global Processing Component is the main entry point of the orchestration sys
 
 ### Global Processing Engine (GPE)
 
-The Global Processing Engine is the main component of the GPC. The GPE takes care of configuring up all the necesary messaging infrastructure on the Global Processing Broker to distribute the tasks to the Processing Clusters. It communicates directly with the message broker to set up the necessary queues and exchanges to allow the distribution of tasks. It also starts all the necessary consumers necessary to allow the federation of queues over the system as a whole to work.
+The Global Processing Engine is the main component of the GPC. The GPE takes care of configuring up all the necessary messaging infrastructure on the Global Processing Broker to distribute the tasks to the Processing Clusters. It communicates directly with the message broker to set up the necessary queues and exchanges to allow the distribution of tasks. It also starts all the necessary consumers necessary to allow the federation of queues over the system as a whole to work.
 
 ### Global Processing Broker (GPB)
 
@@ -79,7 +77,7 @@ The FTP Storage is the storage component of the ULOS. The FTPS is responsible fo
 
 ## Deployment
 
-The deployment of the ULOS is currently done manually but can be automated with the use of Docker in the future. The current deployment requires the manual setup of the components and the configuration of variables (in configuration file) to allow the components to communicate with each other and work properly. The necessary code to allow the deployment with docker and env variables is already in place but further configuration to the docker files is necessary to allow the containers to have the necesarry dependencies to run.
+The deployment of the ULOS is currently done manually but can be automated with the use of Docker in the future. The current deployment requires the manual setup of the components and the configuration of variables (in configuration file) to allow the components to communicate with each other and work properly. The necessary code and files to allow the deployment with docker and env variables is already in place but further configuration is needed. The base code has already been set up to allow it to take its variables from the environment variables rather than from configuration file if the deployment is made with docker. Also, most of the docker and compose files are already in place to allow the deployment of the components with docker but they are missing key dependencies to be able to run some execution environments needed by the processing clusters to execute tasks. For now the deployment is done manually and the necessary dependencies are installed on the machine(s) that are going to run the ULOS.
 
 
 ### Dependencies
@@ -220,7 +218,6 @@ rabbitmqctl set_policy --apply-to queues federated-user-results-queue "^federate
 
 This will allow the scripts' machine to configure an upstream to the GPC and to set a policy to allow the federation of messages from the GPC to the scripts' machine. This will allow the scripts' machine to receive the results from the GPC.
 
-
 ## ⚠️ Warnings and Consideratios
 
 If you plan to make changes to the code of the project you should be aware of the following considerations:
@@ -229,151 +226,3 @@ If you plan to make changes to the code of the project you should be aware of th
 ## Further Work
 
 Further work can be done to improve the project. The recommended additions and improvements can be found in the [poster](/diagrams/poster.pdf) that was created for the project.
-
-### Dependencies
-
-The dependencies for the project are:
-
-- Docker (Everything needed to run docker containers)
-
-Make sure you have these dependencies installed before attempting to run the project. For macOS you can install these dependencies with Homebrew by running the following commands:
-
-```zsh
-brew update
-brew install --cask docker
-```
-
-These commands will make sure that you can run the project locally without having to worry about the dependencies.
-
-Having Docker (Docker Desktop) installed make sure to open it. On macOS, when you open Docker Desktop a Docker icon will appear on the Menu Bar that will show the status of Docker. If everything started successfully you should be able to continue with the rest of the instructions.
-
-### Startup Process
-
-Since the instances of ULOS are going to be containerized it is important to specify some attributes to let communication between containers be possible.
-
-#### Startup for Global Processing Engine
-
-Go to the folder named `global-processing`. From there you should be able to find everything necessary to start the GPE.
-
-For the GPE these environment variables are necessary:
-
-```
-LOCAL_RABBITMQ_HOST = "rabbitmq-global"
-LOCAL_RABBITMQ_PORT = 5672
-LOCAL_RABBITMQ_USERNAME = "guest"
-LOCAL_RABBITMQ_PASSWORD = "guest"
-
-UPSTREAM_RABBITMQ_HOST = "host.docker.internal"
-UPSTREAM_RABBITMQ_PORT = 5672
-UPSTREAM_RABBITMQ_USERNAME = "guest"
-UPSTREAM_RABBITMQ_PASSWORD = "guest"
-```
-
-It is advised to leave the `LOCAL_RABBITMQ_HOST` and `LOCAL_RABBITMQ_PORT` variables as they are unless you know how to modify these attributes from the Docker file and are able to use them effectively as these variables make the direct communication with the processing cluster's RabbitMQ service possible. It is also advised to not modify the `LOCAL_RABBITMQ_USERNAME` and `LOCAL_RABBITMQ_PASSWORD` unless you know how to change the RabbitMQ username and password on the Dockerfile.
-
-##### GPE RabbitMQ Federation
-
-On the other hand, you should change all of the `UPSTREAM_RABBITMQ` variables to connect to an upstream from which messages will be consumed. The upstream for the GPE is the API or whatever service is implemented to receive user requests and tasks. On whatever is implemented, it should have a RabbitMQ broker that publishes the tasks to a queue called `federated_user_tasks_queue` to allow [federated queues](https://www.rabbitmq.com/docs/federated-queues) between RabbitMQ brokers. If this is done correctly on the upstream the only thing necessary to do in the GPE env variables is to set the `UPSTREAM_RABBITMQ` parameters to the specifications of the machine where the upstream RabbitMQ server is located. The configuration on the GPE host machine is taken care of automatically.
-
-Doing this will permit the GPE to consume the messages that the upstream service publishes to the queue.
-
-##### Docker YAML Considerations
-
-Since the deployment is automated you shouldn't have to worry about much when running the `docker compose` commands. Still, you should check the `compose.yaml` file to see the ports that the RabbitMQ service is exposing.
-
-```yaml
-ports:
-  - 15673:15672
-  - 5673:5672
-```
-
-For example, in the above example the docker container port `15672` is being mapped to the host machine port `15673`. As you could notice, the correspondence of ports is not the same and this is not required. This can be used as an advantage if you want to deploy more than one component to the same machine. For example, you could deploy the GPE's RabbitMQ service to port `5672` of a machine and the PC's RabbitMQ service to port `5673` of the same machine. You can leverage this if you don't have many machines to deploy the service on or if you don't need to deploy many processing clusters.
-
-After you have looked at the `compose.yaml` and started the docker service head to the project folder (`global-processing`) and run the following commands:
-
-```zsh
-docker compose up -d
-```
-
-This command will automatically signal docker to start the RabbitMQ server and the GPE to set up the project. In Docker Desktop you can see the compose.
-
-The `rabbitmq-global` container exposes 2 ports, commonly `5672` and `15672` if you didn't configure other ones. On whichever machine you deploy the container you should be able to access the messaging service on port `5672` and access its management interface on port `15672`. This can be done to check on operations, testing, or debugging. Having this set you should be able to connect from any machine to the machine hosting the docker container if you know the IP address of the machine and the container port. Direct messaging between brokers is not advised and has not been tested since RabbitMQ recommends the [Federation plugin](https://www.rabbitmq.com/docs/federation) to transmit messages between brokers without requiring clustering.
-
-#### Startup for Processing Cluster
-
-Go to the folder named `processing-cluster`. From there you should be able to find everything necessary to start the PC.
-
-For the PC these environment variables are necessary:
-
-```
-LOCAL_RABBITMQ_HOST = "rabbitmq-local"
-LOCAL_RABBITMQ_PORT = 5672
-LOCAL_RABBITMQ_USERNAME = "guest"
-LOCAL_RABBITMQ_PASSWORD = "guest"
-
-UPSTREAM_RABBITMQ_HOST = "host.docker.internal"
-UPSTREAM_RABBITMQ_PORT = 5673
-UPSTREAM_RABBITMQ_USERNAME = "guest"
-UPSTREAM_RABBITMQ_PASSWORD = "guest"
-
-FTP_HOST = "192.168.2.13"
-FTP_PORT = 21
-FTP_USERNAME = "fedora"
-FTP_PASSWORD = "fedora"
-
-FTP_DOWNLOADING_CONSUMER_QUANTITY = 2
-FTP_UPLOADING_CONSUMER_QUANTITY = 2
-PROCESSING_CONSUMER_QUANTITY = 5
-
-TASK_TYPE = "Web"
-```
-
-You can change the `FTP_DOWNLOADING_CONSUMER_QUANTITY`, `FTP_UPLOADING_CONSUMER_QUANTITY` and `PROCESSING_CONSUMER_QUANTITY` env variables to change how many consumers will be started on each queue. If you define a number less than 1 the system will default to 1. The `TASK_TYPE` variable is used to define the type of task that the PC will process. This is used set at runtime what types of tasks are going to be processed.
-
-It is advised to leave the `LOCAL_RABBITMQ_HOST` and `LOCAL_RABBITMQ_PORT` variables as they are unless you know how to modify these attributes from the Docker file and are able to use them effectively as these variables make the direct communication with the processing cluster's RabbitMQ service possible. It is also advised to not modify the `LOCAL_RABBITMQ_USERNAME` and `LOCAL_RABBITMQ_PASSWORD` unless you know how to change the RabbitMQ username and password on the Dockerfile.
-
-##### GPE RabbitMQ Federation
-
-On the other hand, you should change all of the `UPSTREAM_RABBITMQ` variables to connect to an upstream from which messages will be consumed. The upstream for the PC is the GPE from where the PC will consume messages from. The GPE has a RabbitMQ broker that publishes the tasks to a queue called `federated_global_processing_queue` to allow [federated queues](https://www.rabbitmq.com/docs/federated-queues) between RabbitMQ brokers. If this is done correctly on the upstream the only thing necessary to do in the PC env variables is to set the `UPSTREAM_RABBITMQ` parameters to the specifications of the machine where the upstream RabbitMQ server is located. The configuration on the PC host machine is taken care of automatically.
-
-Doing this will permit the PC to consume the messages that the upstream service publishes to the queue.
-
-### Further Configuration
-
-At this point most of the configuration has already been done but some things are still missing. We still need to configure how the GPE will receive messages from all the processing clusters that are initialized. To do this you have to add the different PCs as upstreams. You can do this with the following commands on the docker console where the GPE's RabbitMQ service is running:
-
-```zsh
-rabbitmqctl set_parameter federation-upstream <cluster-name> "{\"uri\":\"amqp://<username>:<password>@<host>:<port>\"}"
-rabbitmqctl set_parameter federation-upstream-set processing-clusters "[{\"upstream\": \"<cluster-name>\"}]"
-```
-
-These commands are responsible for defining a new upstream and adding it to the `processing-clusters`. The `processing-clusters` set is part of an automatically defined policy that federates queues from the PCs towards the GPE. Unfortunately, RabbitMQ doesn't yet have a functionality to clusters to a set without having to redefine the whole set so if you want to add a new upstream you also have to redefine the `processing-clusters` parameter. An example of this can be seen below:
-
-```zsh
-rabbitmqctl set_parameter federation-upstream processing-cluster-1 "{\"uri\":\"amqp://guest:guest@host.docker.internal:5674\"}"
-rabbitmqctl set_parameter federation-upstream-set processing-clusters "[{\"upstream\": \"processing-cluster-1\"}]"
-
-# If later I want to add more upstreams I would have to do the following:
-
-rabbitmqctl set_parameter federation-upstream processing-cluster-2 "{\"uri\":\"amqp://guest:guest@192.168.2.10:5674\"}"
-rabbitmqctl set_parameter federation-upstream-set processing-clusters "[{\"upstream\": \"processing-cluster-1\"}, {\"upstream\": \"processing-cluster-2\"}]"
-```
-
-If you know how many PCs you would have from the start (you can always add more later anyways) you could define them all at once.
-
-```zsh
-rabbitmqctl set_parameter federation-upstream processing-cluster-1 "{\"uri\":\"amqp://guest:guest@host.docker.internal:5674\"}"
-rabbitmqctl set_parameter federation-upstream processing-cluster-2 "{\"uri\":\"amqp://guest:guest@192.168.2.10:5674\"}"
-rabbitmqctl set_parameter federation-upstream-set processing-clusters '[{"upstream": "processing-cluster-1"}, {"upstream": "processing-cluster-2"}]'
-```
-
-With this the queues will federate automatically from the PCs defined to the GPE.
-
-Lastly, on whatever service is implemented before the GPE, it should also set up federation policies with the GPE. By default, the GPE already has a queue meant to be federated called `federated_user_results_queue` that stores the results of the tasks that the users send. To federate the queues from the GPE to the implemented service it is necessary to run the following commands wherever the implemented service runs:
-
-```zsh
-rabbitmqctl set_parameter federation-upstream global-processing "{\"uri\":\"amqp://guest:guest@<gpe_host>:5672\"}"
-rabbitmqctl set_policy --apply-to queues federated-user-results-queue "^federated_user_results_queue" "{\"federation-upstream\":\"global-processing\"}"
-```
-
-This will allow for the federation to take place and the service before the GPE to receive messages from the GPE.
