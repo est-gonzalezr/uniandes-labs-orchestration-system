@@ -2,6 +2,7 @@ package executors
 
 import storage.FileManager
 import sys.process.Process
+import sys.process.ProcessLogger
 
 import java.io.File
 
@@ -27,9 +28,10 @@ object WebAppExecutor extends Executor:
         tempDir
       ),
       new File(FileManager.temporalFileFolder.toString)
-    ).!!
+    )
 
-    println(unzipping)
+    println(s"\nRunning unzip command: ${unzipping.toString()}")
+    println(unzipping.!!)
 
     val cypressRun = Process(
       Seq(
@@ -38,12 +40,22 @@ object WebAppExecutor extends Executor:
         "--headless"
       ),
       new File(FileManager.pathToLocal(tempDir + "/cypress").toString)
-    ).!!
+    )
 
-    println(cypressRun)
+    val outputBuffer = new StringBuilder
+    val errorBuffer = new StringBuilder
+
+    val processLogger = ProcessLogger(
+      (out: String) => outputBuffer.append(out),
+      (err: String) => errorBuffer.append(err)
+    )
+
+    println(s"\nRunning cypress command: ${cypressRun.toString()}")
+    println(s"Cypress exit code: ${cypressRun.!(processLogger)}")
+    val cypressText = outputBuffer.toString() + "\n" + errorBuffer.toString()
 
     FileManager.fileToLocal(
-      cypressRun.getBytes,
+      cypressText.getBytes,
       tempDir + "/cypress/output.txt"
     )
 
@@ -55,9 +67,10 @@ object WebAppExecutor extends Executor:
         "."
       ),
       new File(FileManager.pathToLocal(tempDir + "/cypress").toString)
-    ).!!
+    )
 
-    println(zipped)
+    println(s"\nRunning zip command: ${zipped.toString()}")
+    println(zipped.!!)
 
     FileManager.deleteFolder(tempDir)
 

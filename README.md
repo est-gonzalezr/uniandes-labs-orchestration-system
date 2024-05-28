@@ -32,7 +32,7 @@ The Global Processing Engine is the main component of the GPC. The GPE takes car
 
 The Global Processing Broker is the messaging component of the GPC. The GPB is responsible for the deployment of all the messaging infrastructure necessary to allow the distribution of tasks to the Processing Clusters and back. The GPB receives commands from the GPE to set up the necessary queues and exchanges to allow the distribution of tasks. It also allows the federation of queues from and to the Processing Clusters to allow the distribution of tasks to be done.
 
-For the specific messaging layout of the GPE you can see the following diagram.
+For the specific messaging layout of the GPC you can see the following diagram.
 
 ![GPC Messaging Layout](/diagrams/gp_messaging.svg)
 
@@ -55,13 +55,13 @@ The FTP Downloader and Uploader is the component that takes care of downloading 
 
 #### Task Processor
 
-The Task Processor is the component that takes care of processing the tasks that arrive at the processing cluster. It takes care of making sure that the files can be read and that the inner layout of the files (folder layout, necessary files) matches the layout needed for processing a task. After the task is processed the component saves the results to the local file system and sends a message with the file name to the FTP Downloader and Uploader to upload the results to the FTP server. If the execution of the task fails the component sends a message to the GPC to notify that the task has failed with the error message.
+The Task Processor is the component that takes care of processing the tasks that arrive at the processing cluster. It takes care of making sure that the files can be read and that the inner layout of the files (folder layout, necessary files) matches the layout needed for processing a task. After the task is processed the component saves the results to the local file system and sends a message with the file name to the FTP Downloader and Uploader to upload the results to the FTP server.
 
 ### Processing Cluster Broker (PCB)
 
 The Processing Cluster Broker is the messaging component of the PCC. The PCB is responsible for the deployment of all the messaging infrastructure necessary to allow the proper execution steps of tasks inside of the  Processing Clusters. The PCB receives commands from the Messaging Manager to set up the necessary queues and exchanges of the cluster. It also allows the federation of queues from and to the GPC to allow the consumption of tasks from the GCP and the sending of results back to the GPC.
 
-For the specific messaging layout of the PCE you can see the following diagram.
+For the specific messaging layout of the PCC you can see the following diagram.
 
 ![PCC Messaging Layout](/diagrams/pc_messaging.svg)
 
