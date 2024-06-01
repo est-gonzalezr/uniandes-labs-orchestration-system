@@ -23,6 +23,7 @@ object WebAppExecutor extends Executor:
     val unzipping = Process(
       Seq(
         "unzip",
+        "-o",
         localFilePath,
         "-d",
         tempDir
