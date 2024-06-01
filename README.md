@@ -122,7 +122,15 @@ If you are running the whole system on the same machine you have no need for fed
 
 ### Startup for components in different machines
 
-If you are deploying the components in different machines you will have to configure the federation between the GPC and the PCC. To do this you will have to follow the previous steps and some extra steps to allow the federation of messages between components to work.
+If you are deploying the components in different machines you will have to configure the federation between the GPC, the PCC and the scripts' machine. To do this you will have to follow the previous steps and some extra steps to allow the federation of messages between components to work.
+
+First of all it is necessary to enable the plugins that will allow the federation between machines and some others plugins that will make management and debugging easier. To enable the plugins you will have to run the following command on every machine where any part of the system is running:
+
+```zsh
+rabbitmq-plugins enable rabbitmq_management rabbitmq_federation rabbitmq_federation_management rabbitmq_shovel rabbitmq_shovel_management
+```
+
+Having executed this command on all instances of the system you can continue with the rest of the configuration.
 
 #### Federation between GPC and PCC
 
@@ -145,7 +153,7 @@ rabbitmqctl set_parameter federation-upstream $global_processing_upstream_name "
 rabbitmqctl set_policy --apply-to queues $global_processing_policy_name "^$global_processing_federated_queue" "{\"federation-upstream\":\"$global_processing_upstream_name\"}"
 ```
 
-This will allow the processing clusters to configure an upstream to the global processing engine and to set a policy to allow the federation of messages from the global processing engine to the processing clusters.
+This will allow the processing clusters to configure an upstream to the global processing engine and to set a policy to allow the federation of messages from the global processing engine to the processing clusters. If you feel that you need to change any variable feel free to do so.
 
 On the machine where the GPC is running you will have to run the following commands:
 
@@ -175,7 +183,7 @@ rabbitmqctl set_parameter federation-upstream processing-cluster-2 "{\"uri\":\"a
 rabbitmqctl set_parameter federation-upstream-set processing-clusters '[{"upstream": "processing-cluster-1"}, {"upstream": "processing-cluster-2"}]'
 ```
 
-In the example above we are configuring two processing clusters to be part of the federation upstream set of the global processing engine.
+In the example above we are configuring two processing clusters to be part of the federation upstream set of the global processing engine. If you feel that you need to change any variable feel free to do so.
 
 #### Federation between Scripts and GPC
 
@@ -198,7 +206,7 @@ rabbitmqctl set_parameter federation-upstream $user_tasks_upstream_name "{\"uri\
 rabbitmqctl set_policy --apply-to queues $user_tasks_policy_name "^$user_tasks_federated_queue" "{\"federation-upstream\":\"$user_tasks_upstream_name\"}"
 ```
 
-This will allow the GPC to configure an upstream to the machine where the scripts are running and to set a policy to allow the federation of messages from the scripts' machine to the GPC.
+This will allow the GPC to configure an upstream to the machine where the scripts are running and to set a policy to allow the federation of messages from the scripts' machine to the GPC. If you feel that you need to change any variable feel free to do so.
 
 On the machine where the scripts are running you will have to run the following commands:
 
@@ -214,7 +222,7 @@ rabbitmqctl set_parameter federation-upstream global-processing "{\"uri\":\"amqp
 rabbitmqctl set_policy --apply-to queues federated-user-results-queue "^federated_user_results_queue" "{\"federation-upstream\":\"global-processing\"}"
 ```
 
-This will allow the scripts' machine to configure an upstream to the GPC and to set a policy to allow the federation of messages from the GPC to the scripts' machine. This will allow the scripts' machine to receive the results from the GPC.
+This will allow the scripts' machine to configure an upstream to the GPC and to set a policy to allow the federation of messages from the GPC to the scripts' machine. This will allow the scripts' machine to receive the results from the GPC. If you feel that you need to change any variable feel free to do so.
 
 # ⚠️ Warnings and Considerations
 
